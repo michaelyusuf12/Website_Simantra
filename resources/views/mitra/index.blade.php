@@ -6,9 +6,9 @@
 <div class="container-fluid">
     <h3 class="mb-4 text-center">Data Mitra</h3>
 
-    @if (session('success'))
-        <div class="alert alert-success alert-dismissible fade show" role="alert">
-            {{ session('success') }}
+     @if (session('error')) {{-- Optional: Add error message display --}}
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            {{ session('error') }}
             <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
         </div>
     @endif
@@ -44,31 +44,35 @@
                 </tr>
             </thead>
             <tbody class="align-middle">
-                {{-- HAPUS DATA CONTOH @php --}}
-
                 @forelse ($mitras as $mitra)
                     <tr>
-                        <td class="text-center">{{ $loop->iteration }}</td>
+                        <td class="text-center">{{ $loop->iteration + $mitras->firstItem() - 1 }}</td> {{-- Adjusted for pagination --}}
                         <td>{{ $mitra->nama_petugas }}</td>
-                        <td>{{ $mitra->posisi_petugas }}</td>
+                        <td class="text-center">{{ $posisiOptions[$mitra->posisi_petugas] ?? '-' }}</td>
                         <td>{{ $mitra->email }}</td>
                         <td>{{ $mitra->telepon }}</td>
                         <td>{{ $mitra->alamat }}</td>
                         <td class="text-center">
+                            {{-- /// --- PERUBAHAN DI TOMBOL EDIT --- /// --}}
                             <button class="btn btn-warning btn-sm btnEdit"
                                     data-bs-toggle="modal" data-bs-target="#modalMitra"
-                                    data-id="{{ $mitra->id }}"
+                                    {{-- Hapus data-id --}}
+                                    {{-- data-id="{{ $mitra->id }}" --}}
                                     data-kodeprov="{{ $mitra->kode_prov }}"
                                     data-kodekab="{{ $mitra->kode_kab }}"
                                     data-email="{{ $mitra->email }}"
-                                    data-sobatid="{{ $mitra->sobat_id }}"
+                                    {{-- data-sobatid sudah benar --}}
+                                    data-sobatid="{{ $mitra->sobat_id }}" 
                                     data-nama="{{ $mitra->nama_petugas }}"
-                                    data-posisi="{{ $mitra->posisi_petugas }}"
+                                    data-posisi="{{ $mitra->posisi_petugas }}" 
                                     data-telepon="{{ $mitra->telepon }}"
                                     data-alamat="{{ $mitra->alamat }}">
                                 <i class="bi bi-pencil"></i>
                             </button>
-                            <form action="{{ route('mitra.destroy', $mitra->id) }}" method="POST" class="d-inline" onsubmit="return confirm('Apakah Anda yakin ingin menghapus data ini?');">
+                            {{-- /// --- BATAS AKHIR PERUBAHAN TOMBOL --- /// --}}
+
+                            {{-- Form Hapus (Sudah Benar) --}}
+                            <form action="{{ route('mitra.destroy', $mitra->sobat_id) }}" method="POST" class="d-inline" onsubmit="return confirm('Apakah Anda yakin ingin menghapus data ini?');">
                                 @csrf
                                 @method('DELETE')
                                 <button type="submit" class="btn btn-danger btn-sm">
@@ -93,7 +97,8 @@
 </div>
 
 {{-- Memanggil modal dari file terpisah --}}
-@include('mitra.modal')
+{{-- Pindahkan ke luar @section jika modal tidak di tengah --}}
+@include('mitra.modal') 
 
 @endsection
 
@@ -105,14 +110,15 @@ document.addEventListener("DOMContentLoaded", function () {
     const modalTitle = document.getElementById("modalTitle");
     const form = document.getElementById("formMitra");
     const formMethodInput = document.getElementById("formMethod");
-    const mitraIdInput = document.getElementById("mitraId");
+    // Hapus mitraIdInput karena kita tidak pakai ID lama lagi
+    // const mitraIdInput = document.getElementById("mitraId"); 
 
     // Event saat tombol TAMBAH di-klik
     document.querySelector(".btnTambah").addEventListener("click", function () {
         modalTitle.textContent = "Tambah Data Mitra";
         form.reset();
-        mitraIdInput.value = "";
-        form.action = "{{ route('mitra.store') }}"; // <-- DIPERBAIKI
+        // mitraIdInput.value = ""; // Tidak perlu lagi
+        form.action = "{{ route('mitra.store') }}"; 
         formMethodInput.value = "POST";
     });
 
@@ -120,23 +126,29 @@ document.addEventListener("DOMContentLoaded", function () {
     document.querySelectorAll(".btnEdit").forEach(btn => {
         btn.addEventListener("click", function () {
             modalTitle.textContent = "Edit Data Mitra";
-            form.reset();
+            // form.reset(); // Don't reset before setting values
 
-            const mitraId = this.dataset.id;
-            const updateUrl = `{{ url('mitra') }}/${mitraId}`; // <-- DIPERBAIKI
+            // /// --- PERUBAHAN DI JAVASCRIPT --- ///
+            // Baca sobat_id dari data-sobatid, bukan data-id
+            const sobatId = this.dataset.sobatid; 
+            // Buat URL dengan sobatId
+            const updateUrl = `{{ url('mitra') }}/${sobatId}`; 
+            // /// --- BATAS AKHIR PERUBAHAN JAVASCRIPT --- ///
 
-            form.action = updateUrl;
-            formMethodInput.value = "PUT";
+            form.action = updateUrl; // Set action ke URL yang benar
+            formMethodInput.value = "PUT"; // Set method ke PUT
 
-            mitraIdInput.value = mitraId;
-            document.getElementById("kodeProvinsi").value = this.dataset.kodeprov;
-            document.getElementById("kodeKabupaten").value = this.dataset.kodekab;
-            document.getElementById("emailMitra").value = this.dataset.email;
-            document.getElementById("sobatId").value = this.dataset.sobatid;
-            document.getElementById("namaPetugas").value = this.dataset.nama;
-            document.getElementById("posisiPetugas").value = this.dataset.posisi;
-            document.getElementById("telepon").value = this.dataset.telepon;
-            document.getElementById("alamat").value = this.dataset.alamat;
+            // mitraIdInput.value = mitraId; // Tidak perlu lagi
+
+            // Isi field lain (ini sudah benar menggunakan data-* yang sesuai)
+            document.getElementById("kodeProvinsi").value = this.dataset.kodeprov ?? ''; 
+            document.getElementById("kodeKabupaten").value = this.dataset.kodekab ?? ''; 
+            document.getElementById("emailMitra").value = this.dataset.email ?? '';     
+            document.getElementById("sobatId").value = this.dataset.sobatid ?? '';      
+            document.getElementById("namaPetugas").value = this.dataset.nama ?? '';     
+            document.getElementById("posisiPetugas").value = this.dataset.posisi ?? ''; 
+            document.getElementById("telepon").value = this.dataset.telepon ?? '';      
+            document.getElementById("alamat").value = this.dataset.alamat ?? '';       
         });
     });
 });

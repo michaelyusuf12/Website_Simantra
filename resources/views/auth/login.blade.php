@@ -29,9 +29,8 @@
                   @csrf
                   <div class="mb-3">
                     <label for="username" class="form-label">Username</label>
-                    {{-- Menambahkan old('username') untuk menyimpan input --}}
-                    <input type="text" id="username" name="username" class="form-control @error('username') is-invalid @enderror" value="{{ old('username') }}" required autofocus>
-                    {{-- Menampilkan error validasi spesifik untuk username --}}
+                    <input type="text" id="username" name="username" class="form-control @error('username') is-invalid @enderror" value="{{ old('username') }}" required autofocus autocomplete="off">
+                    {{-- Error username sudah benar di sini --}}
                     @error('username')
                         <div class="invalid-feedback">
                             {{ $message }}
@@ -41,26 +40,21 @@
 
                   <div class="mb-3">
                     <label for="password" class="form-label">Password</label>
-                    {{-- Menggunakan input-group untuk tombol show/hide password --}}
-                    <div class="input-group">
-                        <input type="password" id="password" name="password" class="form-control @error('password') is-invalid @enderror" required>
+                    
+                    <div class="input-group has-validation">
+                        <input type="password" id="password" name="password" class="form-control @error('password') is-invalid @enderror" required autocomplete="off" minlength="6">
                         <button class="btn btn-outline-secondary" type="button" id="togglePassword">
                             <i class="bi bi-eye"></i>
                         </button>
+                        
+                        @error('password')
+                            <div class="invalid-feedback">
+                                {{ $message }}
+                            </div>
+                        @enderror
                     </div>
-                     @error('password')
-                        <div class="invalid-feedback">
-                            {{ $message }}
-                        </div>
-                    @enderror
-                  </div>
 
-                  <div class="mb-3 form-check">
-                      {{-- Menambahkan checkbox "Ingat Saya" --}}
-                      <input type="checkbox" class="form-check-input" id="remember" name="remember">
-                      <label class="form-check-label" for="remember">Ingat Saya</label>
                   </div>
-
                   <div class="d-grid">
                     <button type="submit" class="btn btn-primary btn-lg fw-bold">LOGIN</button>
                   </div>
@@ -79,7 +73,7 @@
 <script>
 document.addEventListener('DOMContentLoaded', function () {
     const togglePassword = document.getElementById('togglePassword');
-    const password = document.getElementById('password');
+    const password = document.getElementById('password'); // <-- Kita sudah punya variabel 'password'
     const icon = togglePassword.querySelector('i');
 
     togglePassword.addEventListener('click', function () {
@@ -91,6 +85,30 @@ document.addEventListener('DOMContentLoaded', function () {
         icon.classList.toggle('bi-eye');
         icon.classList.toggle('bi-eye-slash');
     });
+
+    // -----------------------------------------------------------------
+    // /// --- PERBAIKANNYA DI SINI --- ///
+    // Script untuk mengganti pesan validasi bawaan browser
+    // -----------------------------------------------------------------
+    
+    // Saat browser mendeteksi error (sebelum submit)
+    password.addEventListener("invalid", function(event) {
+        // Cek jika errornya adalah karena 'minlength' (terlalu pendek)
+        if (password.validity.tooShort) {
+            password.setCustomValidity("Password minimal harus 6 karakter.");
+        } 
+        // Cek jika errornya adalah karena 'required' (kosong)
+        else if (password.validity.valueMissing) {
+            password.setCustomValidity("Password wajib diisi.");
+        }
+    });
+
+    // Penting: Hapus pesan custom saat pengguna mulai mengetik lagi
+    // Jika tidak, form tidak akan bisa disubmit
+    password.addEventListener("input", function(event) {
+        password.setCustomValidity("");
+    });
+
 });
 </script>
 @endpush

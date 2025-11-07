@@ -25,9 +25,18 @@
                                 <input type="text" class="form-control" id="telepon" name="telepon">
                             </div>
                             <div class="mb-3">
-                                <label for="posisiPetugas" class="form-label">Posisi Petugas</label>
-                                <input type="text" class="form-control" id="posisiPetugas" name="posisi_petugas">
-                            </div>
+                            <label for="posisiPetugas" class="form-label">Posisi Petugas</label>
+                            <select class="form-select @error('posisi_petugas') is-invalid @enderror" id="posisiPetugas" name="posisi_petugas">
+                                <option value="" selected disabled>-- Pilih Posisi --</option>
+                                {{-- Loop melalui opsi dari Controller --}}
+                                @foreach($posisiOptions as $kode => $nama)
+                                    <option value="{{ $kode }}">{{ $nama }}</option>
+                                @endforeach
+                            </select>
+                            @error('posisi_petugas')
+                                <div class="invalid-feedback">{{ $message }}</div>
+                            @enderror
+                        </div>
                         </div>
                         <div class="col-md-6">
                             <div class="mb-3">
@@ -36,11 +45,11 @@
                             </div>
                             <div class="mb-3">
                                 <label for="kodeProvinsi" class="form-label">Kode Provinsi</label>
-                                <input type="text" class="form-control" id="kodeProvinsi" name="kode_prov">
+                                <input type="text" class="form-control" id="kodeProvinsi" name="kode_prov" value="74">
                             </div>
                             <div class="mb-3">
                                 <label for="kodeKabupaten" class="form-label">Kode Kabupaten</label>
-                                <input type="text" class="form-control" id="kodeKabupaten" name="kode_kab">
+                                <input type="text" class="form-control" id="kodeKabupaten" name="kode_kab" value="04">
                             </div>
                             <div class="mb-3">
                                 <label for="alamat" class="form-label">Alamat</label>

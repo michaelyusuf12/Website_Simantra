@@ -13,6 +13,7 @@ class DatabaseSeeder extends Seeder
             MitraSeeder::class,
             KegiatanSeeder::class,
             UserSeeder::class,
+            SettingSeeder::class,
         ]);
     }
 }

@@ -8,12 +8,15 @@ class UserSeeder extends Seeder
 {
     public function run(): void
     {
-    User::truncate(); 
-    User::create([
-        'username' => 'admin', 
-        'password' => Hash::make('password'), 
-        'nip' => '199001012020011001', // <-- Contoh NIP
-        'seksi' => 'Produksi',       // <-- Contoh Seksi
+        // Hapus user lama jika ada
+        User::truncate();
+
+        // Buat user baru dengan kolom 'fungsi'
+        User::create([
+            'username' => 'admin',
+            'password' => Hash::make('password'),
+            'nip' => '199001012020011001',
+            'fungsi' => 'Produksi', // <-- UBAH 'seksi' MENJADI 'fungsi' DI SINI
         ]);
     }
 }
