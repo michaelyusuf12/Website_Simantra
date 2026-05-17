@@ -6,14 +6,14 @@ use Illuminate\Database\Seeder;
 
 class DatabaseSeeder extends Seeder
 {
+    /**
+     * Seed the application's database.
+     */
     public function run(): void
     {
-        // Panggil seeder baru kita di sini
+        // Memanggil UserSeeder untuk dijalankan
         $this->call([
-            MitraSeeder::class,
-            KegiatanSeeder::class,
             UserSeeder::class,
-            SettingSeeder::class,
         ]);
     }
 }

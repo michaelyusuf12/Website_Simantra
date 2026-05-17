@@ -3,16 +3,16 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>SIKEPAS</title> 
+  <title>SIMANTRA</title> 
   <meta name="csrf-token" content="{{ csrf_token() }}">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
   
 <style>
-    /* (CSS Anda biarkan sama) */
     .user-profile { display: flex; align-items: center; gap: 8px; }
     .user-profile i { font-size: 1.8rem; color: white; }
     .user-profile span { color: white; font-weight: 500; font-size: 16px; }
+    .nav-link { transition: all 0.3s; }
 </style>
 </head>
 <body>
@@ -23,72 +23,178 @@
   <div class="d-flex">
     {{-- Sidebar --}}
     <div class="bg-primary text-white p-3 vh-100" style="width: 250px;">
-        {{-- (Isi sidebar biarkan sama) --}}
-        <ul class="nav flex-column">
-            <li class="nav-item mb-2"> <a href="{{ route('beranda') }}" class="nav-link text-white"><i class="bi bi-house-door-fill"></i> Beranda</a> </li>
-            <li class="nav-item mb-2"> <a href="{{ route('kelolakegiatan.index') }}" class="nav-link text-white"><i class="bi bi-clipboard2-data-fill"></i> Kelola Kegiatan</a> </li>
-            <li class="nav-item mb-2"> <a href="{{ route('mitra.index') }}" class="nav-link text-white"><i class="bi bi-people-fill"></i> Mitra</a> </li>
-            <li class="nav-item mb-2"> <a href="{{ route('datakegiatan.index') }}" class="nav-link text-white"><i class="bi bi-calendar-check-fill"></i> Data Kegiatan</a> </li>
-            <li class="nav-item mb-2"> <a href="{{ route('pegawai.index') }}" class="nav-link text-white"><i class="bi bi-person-badge-fill"></i> Data Pegawai</a> </li>
-            <li class="nav-item mb-2"> <a href="{{ route('settings.index') }}" class="nav-link text-white"><i class="bi bi-gear-fill"></i> Pengaturan</a> </li>
-            <li class="nav-item mt-auto"> <form action="{{ route('logout') }}" method="POST"> @csrf <button type="submit" class="btn btn-outline-light w-100"><i class="bi bi-box-arrow-right"></i> Keluar</button> </form> </li>
+        <ul class="nav flex-column gap-1">
+            
+            @php
+                $userRole = auth()->user()->role;
+                
+                // MENENTUKAN LINK BERANDA
+                $berandaLink = route('beranda'); // Default Admin
+                if($userRole == 'mitra') $berandaLink = route('mitra.beranda'); 
+                if($userRole == 'kepala') $berandaLink = route('kepala.beranda');
+                
+                // UBAH BARIS INI: Arahkan ke pegawai.beranda, bukan kelolakegiatan.index
+                //if($userRole == 'pegawai') $berandaLink = route('pegawai.beranda'); 
+            @endphp
+
+            {{-- MENU BERANDA --}}
+            <li class="nav-item"> 
+                <a href="{{ $berandaLink }}" 
+                   class="nav-link {{ (request()->routeIs('beranda') || request()->routeIs('mitra.beranda') || request()->routeIs('mitra.dashboard') || request()->routeIs('kepala.beranda') || request()->routeIs('pegawai.beranda')) ? 'active bg-white text-primary rounded shadow-sm' : 'text-white' }}">
+                    <i class="bi bi-house-door-fill me-2"></i> Beranda
+                </a> 
+            </li>
+
+            {{-- MENU KHUSUS ADMIN (INI YANG SEBELUMNYA HILANG) --}}
+            @if($userRole == 'admin')
+                <li class="nav-item"> 
+                    <a href="{{ route('mitra.index') }}" class="nav-link {{ request()->routeIs('mitra.*') ? 'active bg-white text-primary rounded shadow-sm' : 'text-white' }}">
+                        <i class="bi bi-people-fill me-2"></i> Data Mitra
+                    </a> 
+                </li>
+                <li class="nav-item"> 
+                    <a href="{{ route('datakegiatan.index') }}" class="nav-link {{ request()->routeIs('datakegiatan.*') ? 'active bg-white text-primary rounded shadow-sm' : 'text-white' }}">
+                        <i class="bi bi-calendar-check-fill me-2"></i> Data Kegiatan
+                    </a> 
+                </li>
+                <li class="nav-item"> 
+                    <a href="{{ route('pegawai.index') }}" class="nav-link {{ request()->routeIs('pegawai.*') ? 'active bg-white text-primary rounded shadow-sm' : 'text-white' }}">
+                        <i class="bi bi-person-badge-fill me-2"></i> Data Pegawai
+                    </a> 
+                </li>
+                <li class="nav-item"> 
+                    <a href="{{ route('settings.index') }}" class="nav-link {{ request()->routeIs('settings.*') ? 'active bg-white text-primary rounded shadow-sm' : 'text-white' }}">
+                        <i class="bi bi-gear-fill me-2"></i> Pengaturan
+                    </a> 
+                </li>
+            @endif
+
+            {{-- MENU KHUSUS MITRA --}}
+            @if($userRole == 'mitra')
+                <li class="nav-item"> 
+                    <a href="{{ route('mitra.riwayat') }}" 
+                       class="nav-link {{ request()->routeIs('mitra.riwayat') ? 'active bg-white text-primary rounded shadow-sm' : 'text-white' }}">
+                        <i class="bi bi-clipboard-data-fill me-2"></i> Riwayat Penugasan
+                    </a> 
+                </li>
+            @endif
+
+            {{-- MENU KHUSUS PEGAWAI --}}
+            @if($userRole == 'pegawai')
+                <li class="nav-item"> 
+                    <a href="{{ route('kelolakegiatan.index') }}" 
+                       class="nav-link {{ request()->routeIs('kelolakegiatan.*') ? 'active bg-white text-primary rounded shadow-sm' : 'text-white' }}">
+                        <i class="bi bi-pencil-square me-2"></i> Kelola Penugasan
+                    </a> 
+                </li>
+            @endif
+
+            {{-- MENU KHUSUS KEPALA BPS --}}
+            @if($userRole == 'kepala')
+                <li class="nav-item"> 
+                    <a href="{{ route('kepala.approval') }}" 
+                        class="nav-link {{ request()->routeIs('kepala.approval') ? 'active bg-white text-primary rounded shadow-sm' : 'text-white' }}">
+                            <i class="bi bi-file-earmark-check me-2"></i> Approval Kontrak
+                    </a>
+                </li>
+            @endif
+
+            <hr class="text-white opacity-25">
+            
+            {{-- MENU PROFIL --}}
+            <li class="nav-item">
+                <a href="{{ route('profil.index') }}" 
+                   class="nav-link {{ request()->routeIs('profil.index') ? 'active bg-white text-primary rounded shadow-sm' : 'text-white' }}">
+                    <i class="bi bi-person-circle me-2"></i> Profil Saya
+                </a>
+            </li>
+
+            {{-- LOGOUT --}}
+            <li class="nav-item mt-auto pt-4"> 
+                <form action="{{ route('logout') }}" method="POST"> 
+                    @csrf 
+                    <button type="submit" class="btn btn-outline-light w-100"><i class="bi bi-box-arrow-right me-2"></i> Keluar</button> 
+                </form> 
+            </li>
         </ul>
     </div>
 
     {{-- Konten --}}
     <div class="flex-grow-1 p-4" style="overflow-y: auto; height: calc(100vh - 56px);"> 
-      
-        {{-- Pesan Sukses (Sudah Ada) --}}
-        @if (session('success'))
-            <div class="text-center">
-                <div class="alert alert-success alert-dismissible fade show d-inline-block" role="alert" id="success-alert">
-                    {{ session('success') }}
-                </div>
-            </div>
-        @endif
-
-        {{-- Pesan Error (Baru Ditambahkan) --}}
-        @if (session('error'))
-            <div class="text-center">
-                 {{-- Gunakan alert-danger untuk error --}}
-                 {{-- Tambahkan id agar bisa hilang otomatis juga jika mau --}}
-                <div class="alert alert-danger alert-dismissible fade show d-inline-block" role="alert" id="error-alert"> 
-                    {{ session('error') }}
-                    {{-- Tombol close opsional, karena akan hilang otomatis --}}
-                    {{-- <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button> --}}
-                </div>
-            </div>
-        @endif
+        
         @yield('content')
     </div>
   </div>
 
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+
+    // ========================================================
+    // 1. GLOBAL TOAST UNTUK NOTIFIKASI SUKSES / ERROR
+    // ========================================================
+    @if(session('success'))
+        Swal.fire({
+            icon: 'success',
+            title: 'Berhasil!',
+            text: "{!! session('success') !!}",
+            showConfirmButton: false,
+            timer: 2500,
+            toast: true,
+            position: 'top-end'
+        });
+    @endif
+
+    @if(session('error'))
+        Swal.fire({
+            icon: 'error',
+            title: 'Gagal!',
+            text: "{!! session('error') !!}",
+            showConfirmButton: false,
+            timer: 3500,
+            toast: true,
+            position: 'top-end'
+        });
+    @endif
+
+    // ========================================================
+    // 2. GLOBAL SWEETALERT UNTUK SEMUA TOMBOL HAPUS
+    // ========================================================
+    const btnHapusSweet = document.querySelectorAll('.btn-hapus-sweet');
+    
+    btnHapusSweet.forEach(button => {
+        button.addEventListener('click', function(e) {
+            e.preventDefault(); // Mencegah halaman langsung beralih/ter-submit
+            
+            const formHapus = this.closest('.form-hapus'); 
+            
+            // Mengambil nama kustom dari atribut HTML jika ada, jika tidak pakai teks default
+            const namaData = this.getAttribute('data-name') || 'Data ini';
+
+            Swal.fire({
+                title: 'Apakah Anda yakin?',
+                text: namaData + " akan dihapus permanen dari sistem!",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#d33',
+                cancelButtonColor: '#6c757d',
+                confirmButtonText: '<i class="bi bi-trash"></i> Ya, hapus!',
+                cancelButtonText: 'Batal'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    formHapus.submit(); // Eksekusi penghapusan jika dikonfirmasi
+                }
+            });
+        });
+    });
+
+});
+</script>
+  {{-- SANGAT PENTING: Tempat untuk menampung script dari halaman lain --}}
   @stack('scripts')
-
-  {{-- Script Auto-Close Alert (Tambahkan untuk error-alert) --}}
-  <script>
-  document.addEventListener("DOMContentLoaded", function () {
-      // Cari alert sukses
-      var successAlert = document.getElementById('success-alert');
-      if (successAlert) {
-          setTimeout(function() {
-              var bsAlert = new bootstrap.Alert(successAlert);
-              bsAlert.close();
-          }, 5000); // Hilang setelah 5 detik
-      }
-
-      // --- TAMBAHAN: Cari alert error ---
-      var errorAlert = document.getElementById('error-alert');
-      if (errorAlert) {
-          setTimeout(function() {
-              var bsAlert = new bootstrap.Alert(errorAlert);
-              bsAlert.close();
-          }, 7000); // Beri waktu lebih lama (7 detik) untuk membaca pesan error
-      }
-      // --- BATAS AKHIR TAMBAHAN ---
-  });
-  </script>
+  
 </body>
 </html>

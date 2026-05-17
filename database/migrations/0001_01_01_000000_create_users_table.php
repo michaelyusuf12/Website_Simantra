@@ -12,18 +12,22 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('users', function (Blueprint $table) {
-            $table->id();
-            $table->string('username')->unique(); // dipakai untuk login
-            $table->string('password');           // password (hash)
-            $table->rememberToken();              // remember me
-            $table->timestamps();
-        });
+            $table->id('id_user'); 
+            $table->string('nama'); 
+            
+            // NIP dibuat nullable agar Mitra yang tidak punya NIP tidak error
+            $table->string('nip')->nullable()->unique(); 
+            
+            $table->string('username')->unique();
+            $table->string('password');
+            $table->string('role'); 
+            
+            // TAMBAHAN: Kolom Foto Profil
+            $table->string('foto')->nullable()->default('default_profile.png');
 
-        Schema::create('password_reset_tokens', function (Blueprint $table) {
-            $table->string('username')->primary(); // ganti email -> username
-            $table->string('token');
-            $table->timestamp('created_at')->nullable();
-        });
+            $table->rememberToken();
+            $table->timestamps();
+    });
 
         Schema::create('sessions', function (Blueprint $table) {
             $table->string('id')->primary();

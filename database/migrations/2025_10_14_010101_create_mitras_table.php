@@ -10,6 +10,7 @@ return new class extends Migration
     {
         Schema::create('mitras', function (Blueprint $table) {
             $table->id();
+            $table->unsignedBigInteger('id_user');
             $table->string('nama_petugas');
             $table->string('posisi_petugas')->nullable();
             $table->string('email')->unique();
@@ -19,6 +20,8 @@ return new class extends Migration
             $table->string('kode_prov')->nullable();
             $table->string('kode_kab')->nullable();
             $table->timestamps();
+
+            $table->foreign('id_user')->references('id_user')->on('users')->onDelete('cascade');
         });
     }
 
