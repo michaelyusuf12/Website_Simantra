@@ -3,15 +3,16 @@
 @section('content')
 <div class="container-fluid py-4">
  
-    {{-- Logika PHP untuk Filter Bulan --}}
+    {{-- Logika PHP untuk Filter Bulan & Tahun --}}
     @php
         $bulanIndo = [
             1 => 'Januari', 2 => 'Februari', 3 => 'Maret', 4 => 'April',
             5 => 'Mei', 6 => 'Juni', 7 => 'Juli', 8 => 'Agustus',
             9 => 'September', 10 => 'Oktober', 11 => 'November', 12 => 'Desember'
         ];
-        $bulanDipilih = request('month', date('n')); 
-        $tahunSaatIni = date('Y');
+        $bulanPilih = request('month', date('n')); 
+        $tahunPilih = request('year', date('Y'));
+        $listTahun = range(2024, date('Y') + 1); // List tahun dinamis
     @endphp
  
     {{-- JUDUL HALAMAN --}}
@@ -22,116 +23,177 @@
     <div class="card border-0 shadow-sm" style="border-radius: 12px;">
         
         {{-- ========================================== --}}
-        {{-- HEADER CARD: JUDUL, FILTER BULAN & SEARCH  --}}
+        {{-- HEADER CARD: JUDUL, FILTER ACCORDION & SEARCH --}}
         {{-- ========================================== --}}
-        <div class="card-header bg-white border-bottom py-3 d-flex flex-column flex-lg-row justify-content-between align-items-lg-center" style="border-radius: 12px 12px 0 0;">
-            <h6 class="fw-bold mb-3 mb-lg-0 text-dark">Seluruh Riwayat Penugasan Anda</h6>
+        <div class="card-header bg-white border-bottom py-3 px-4 d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3" style="border-radius: 12px 12px 0 0;">
+            <h6 class="fw-bold mb-0 text-dark">Seluruh Riwayat Penugasan Anda</h6>
             
-            <div class="d-flex flex-column flex-md-row gap-2">
-                {{-- 1. Dropdown Filter Bulan --}}
-                <div class="dropdown">
-                    <button class="btn btn-white border dropdown-toggle px-3 shadow-sm text-dark" type="button" data-bs-toggle="dropdown" style="border-radius: 6px; font-weight: 500; font-size: 0.9rem;">
-                        <i class="bi bi-calendar3 me-2 text-primary"></i> 
-                        {{ $bulanIndo[(int)$bulanDipilih] }} {{ $tahunSaatIni }}
+            <div class="d-flex flex-column flex-sm-row gap-2 align-items-sm-center">
+                
+                {{-- 1. Dropdown Filter Accordion Premium --}}
+                <div class="dropdown shadow-sm">
+                    <button class="btn btn-white dropdown-toggle border-primary bg-white fw-bold text-primary shadow-sm px-3" type="button" data-bs-toggle="dropdown" data-bs-auto-close="outside" aria-expanded="false" style="border-radius: 8px; height: 38px;">
+                        <i class="bi bi-calendar3 me-1"></i> {{ $bulanIndo[(int)$bulanPilih] }} {{ $tahunPilih }}
                     </button>
-                    <ul class="dropdown-menu dropdown-menu-end shadow border-0" style="border-radius: 8px;">
-                        <li><h6 class="dropdown-header">Pilih Periode</h6></li>
-                        @foreach($bulanIndo as $angka => $nama)
-                            <li>
-                                <a class="dropdown-item {{ $bulanDipilih == $angka ? 'active bg-primary text-white' : '' }}" 
-                                   href="?month={{ $angka }}{{ request('search') ? '&search='.urlencode(request('search')) : '' }}">
-                                    {{ $nama }}
-                                </a>
-                            </li>
-                        @endforeach
-                    </ul>
+                    
+                    <div class="dropdown-menu dropdown-menu-end p-3 shadow-lg border-0" style="width: 320px; border-radius: 12px;">
+                        <div class="text-center mb-3 pb-2 border-bottom">
+                            <span class="fw-bold text-dark" style="font-size: 0.95rem;"><i class="bi bi-funnel-fill me-1 text-primary"></i> Pilih Tahun & Bulan</span>
+                        </div>
+                        
+                        <div class="accordion accordion-flush" id="accordionTahunRiwayat">
+                            @foreach($listTahun as $th)
+                            <div class="accordion-item border-0 mb-2">
+                                <h2 class="accordion-header" id="heading-rw-{{ $th }}">
+                                    <button class="accordion-button {{ $tahunPilih == $th ? '' : 'collapsed' }} py-2 px-3 fw-bold rounded bg-light border shadow-sm" type="button" data-bs-toggle="collapse" data-bs-target="#collapse-rw-{{ $th }}" style="font-size: 0.9rem;">
+                                        Tahun {{ $th }}
+                                    </button>
+                                </h2>
+                                <div id="collapse-rw-{{ $th }}" class="accordion-collapse collapse {{ $tahunPilih == $th ? 'show' : '' }}" data-bs-parent="#accordionTahunRiwayat">
+                                    <div class="accordion-body p-2 border border-top-0 rounded-bottom bg-white">
+                                        <div class="row g-2">
+                                            @foreach($bulanIndo as $angka => $nama)
+                                            <div class="col-4">
+                                                {{-- Link ini otomatis menyertakan keyword search jika sedang melakukan pencarian --}}
+                                                <a href="?year={{ $th }}&month={{ $angka }}{{ request('search') ? '&search='.request('search') : '' }}" class="btn btn-sm w-100 {{ ($tahunPilih == $th && $bulanPilih == $angka) ? 'btn-primary text-white fw-bold shadow' : 'btn-outline-primary' }}" style="font-size: 0.75rem; border-radius: 6px;">
+                                                    {{ substr($nama, 0, 3) }}
+                                                </a>
+                                            </div>
+                                            @endforeach
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            @endforeach
+                        </div>
+                    </div>
                 </div>
 
-                {{-- 2. Form Pencarian dengan Tombol Biru --}}
-                <form action="" method="GET" class="d-flex m-0">
-                    @if(request('month'))
-                        <input type="hidden" name="month" value="{{ request('month') }}">
-                    @endif
-                    <div class="input-group shadow-sm" style="border-radius: 6px; overflow: hidden;">
-                        <input type="text" name="search" class="form-control" placeholder="Cari No. Surat atau Kegiatan..." value="{{ request('search') }}" style="font-size: 0.9rem; min-width: 250px;">
-                        <button class="btn btn-primary px-3" type="submit" style="font-weight: 500; font-size: 0.9rem;">
+                {{-- 2. Form Pencarian Teks --}}
+                <form action="{{ route('mitra.riwayat') }}" method="GET" class="d-flex mb-0">
+                    {{-- Menyimpan status bulan dan tahun saat melakukan pencarian --}}
+                    <input type="hidden" name="month" value="{{ $bulanPilih }}">
+                    <input type="hidden" name="year" value="{{ $tahunPilih }}">
+                    
+                    <div class="input-group shadow-sm" style="border-radius: 8px; overflow: hidden;">
+                        <input type="text" class="form-control border" name="search" placeholder="Cari No. Surat / Kegiatan..." value="{{ request('search') }}" style="font-size: 0.9rem; height: 38px; min-width: 250px;">
+                        <button class="btn btn-primary px-3 fw-medium" type="submit" style="height: 38px;">
                             <i class="bi bi-search me-1"></i> Cari
                         </button>
                     </div>
                 </form>
+                
             </div>
         </div>
         
         {{-- ========================================== --}}
-        {{-- TABEL DATA (DESAIN BIRU MUDA & BORDER)     --}}
+        {{-- TABEL DATA (DESAIN CLEAN & PROFESIONAL)    --}}
         {{-- ========================================== --}}
         <div class="card-body p-0">
             <div class="table-responsive">
-                {{-- Penambahan class table-bordered untuk memunculkan garis vertikal --}}
-                <table class="table table-bordered table-hover align-middle mb-0">
-                    {{-- Warna background biru muda presisi disesuaikan dengan Gambar 1 --}}
-                    <thead class="text-center align-middle" style="background-color: #e6f0ff; color: #212529; font-size: 0.9rem;">
+                <table class="table table-striped table-bordered table-hover mb-0 align-middle border-top">
+                    <thead class="table-primary text-center">
                         <tr>
                             <th class="py-3" style="width: 50px;">No</th>
-                            <th class="py-3">Nomor Surat</th>
-                            <th class="py-3">Bulan</th>
-                            <th class="py-3">Rincian Tugas</th>
+                            <th class="py-3">Nomor Surat Tugas</th>
+                            <th class="py-3">Bulan Penugasan</th>
+                            <th class="py-3">Fungsi</th>
+                            <th class="py-3">Kegiatan</th>
                             <th class="py-3">Total Honor</th>
                             <th class="py-3">Status</th>
                             <th class="py-3" style="width: 120px;">Aksi</th>
                         </tr>
                     </thead>
-                    <tbody class="text-center" style="font-size: 0.9rem;">
+                    <tbody>
                         @forelse($riwayatPenugasan as $index => $p)
                         <tr>
-                            <td>{{ $index + 1 }}</td>
-                            <td><span class="text-primary fw-medium">{{ $p->no_surat }}</span></td>
-                            <td>
-                                <span class="badge bg-light text-dark border">{{ $p->bulan_kegiatan }}</span>
+                            <td class="text-center text-muted fw-bold">{{ $index + 1 }}</td>
+                            <td class="text-center">
+                                <span class="text-primary fw-bold" style="font-size: 0.9rem;">
+                                    {{ $p->no_surat }}
+                                </span>
                             </td>
-                            <td class="text-start">
+                            <td class="text-center">
+                                <span class="badge bg-white text-dark border px-3 py-2 fw-normal shadow-sm" style="border-radius: 6px;">{{ $p->bulan_kegiatan }}</span>
+                            </td>
+                            
+                            {{-- KOLOM FUNGSI --}}
+                            <td class="text-center fw-medium text-dark">
+                                @if($p->details && $p->details->count() > 0)
+                                    {{ $p->details->first()->kegiatan->fungsi ?? '-' }}
+                                @else
+                                    -
+                                @endif
+                            </td>
+                            
+                            {{-- KOLOM KEGIATAN --}}
+                            <td class="text-start fw-medium text-dark">
                                 @if($p->details && $p->details->count() > 0)
                                     {{ $p->details->first()->kegiatan->Nama_kegiatan ?? $p->details->first()->kegiatan->nama_kegiatan ?? '-' }}
                                 @else
                                     -
                                 @endif
                             </td>
-                            <td class="fw-bold text-primary">Rp {{ number_format($p->total_nilai_perjanjian, 0, ',', '.') }}</td>
+
+                            <td class="text-end px-3 fw-bold text-primary">Rp {{ number_format($p->total_nilai_perjanjian, 0, ',', '.') }}</td>
                             
-                            <td>
+                            <td class="text-center">
                                 @php
                                     $status = strtolower($p->status_kontrak ?? 'menunggu approval');
-                                    if($status == 'disetujui') {
+                                    if($status == 'disetujui' || $status == 'acc') {
                                         $badgeClass = 'bg-success';
-                                    } elseif($status == 'menunggu approval') {
-                                        $badgeClass = 'bg-warning text-dark';
+                                    } elseif($status == 'ditolak') {
+                                        $badgeClass = 'bg-danger';
                                     } else {
-                                        $badgeClass = 'bg-secondary';
+                                        $badgeClass = 'bg-warning text-dark';
                                     }
                                 @endphp
-                                <span class="badge {{ $badgeClass }} px-2 py-1" style="border-radius: 4px; font-weight: 500;">
+                                <span class="badge {{ $badgeClass }} px-3 py-2 shadow-sm" style="border-radius: 6px; font-weight: 500;">
                                     {{ ucwords($p->status_kontrak ?? 'Menunggu Approval') }}
                                 </span>
                             </td>
 
-                            <td>
-                                <div class="d-flex justify-content-center gap-1">
-                                    {{-- Tombol Mata --}}
-                                    <button class="btn btn-sm btn-outline-info px-2 py-1 btn-lihat-kontrak" title="Preview SPK" data-bs-toggle="modal" data-bs-target="#modalDetail" data-url="{{ route('kelolakegiatan.cetak', $p->id_penugasan) }}?preview=true">
-                                        <i class="bi bi-eye"></i>
+                            <td class="text-center">
+                                <div class="d-flex justify-content-center gap-2">
+                                    
+                                    {{-- TOMBOL MATA (Preview Pop-Up) --}}
+                                    <button type="button" class="btn btn-sm btn-outline-info shadow-sm btn-lihat-kontrak" 
+                                        title="Lihat Detail Penugasan" 
+                                        data-bs-toggle="modal" 
+                                        data-bs-target="#modalDetail"
+                                        data-nosurat="{{ $p->no_surat }}"
+                                        data-mitra="{{ $p->mitra->nama_petugas ?? '-' }}"
+                                        data-bulan="{{ $p->bulan_kegiatan }}"
+                                        data-tanggal="{{ $p->tanggal_surat }}"
+                                        data-status="{{ $p->status_kontrak ?? 'Menunggu Approval' }}"
+                                        data-total="{{ $p->total_nilai_perjanjian }}"
+                                        data-details="{{ json_encode($p->details->map(function($d) {
+                                            return [
+                                                'kegiatan' => $d->kegiatan->Nama_kegiatan ?? $d->kegiatan->nama_kegiatan ?? '-',
+                                                'peran'    => $d->uraian_tugas ?? '-', 
+                                                'mulai'    => $d->tanggal_mulai ?? '-', 
+                                                'selesai'  => $d->tanggal_selesai ?? '-', 
+                                                'volume'   => $d->volume ?? 0,
+                                                'satuan'   => $d->satuan ?? 'Dokumen',
+                                                'harga'    => $d->harga_satuan ?? 0,
+                                                'subtotal' => ($d->volume ?? 0) * ($d->harga_satuan ?? 0)
+                                            ];
+                                        })) }}">
+                                        <i class="bi bi-eye-fill"></i>
                                     </button>
-                                    {{-- Tombol Cetak --}}
-                                    <a href="{{ route('kelolakegiatan.cetak', $p->id_penugasan) }}" target="_blank" class="btn btn-sm btn-outline-secondary px-2 py-1" title="Cetak SPK">
-                                        <i class="bi bi-printer"></i>
+
+                                    {{-- TOMBOL CETAK SPK --}}
+                                    <a href="{{ route('kelolakegiatan.cetak', $p->id_penugasan) }}" target="_blank" class="btn btn-sm btn-outline-secondary shadow-sm" title="Cetak SPK">
+                                        <i class="bi bi-printer-fill"></i>
                                     </a>
                                 </div>
                             </td>
                         </tr>
                         @empty
                         <tr>
-                            <td colspan="7" class="text-center py-5 text-muted">
-                                <i class="bi bi-search fs-1 d-block mb-2 opacity-50"></i>
-                                Belum ada penugasan yang ditemukan pada bulan ini.
+                            <td colspan="8" class="text-center py-5 text-muted bg-white">
+                                <i class="bi bi-inbox fs-1 d-block mb-3 text-secondary" style="opacity: 0.5;"></i>
+                                Belum ada penugasan yang ditemukan.
                             </td>
                         </tr>
                         @endforelse
@@ -139,15 +201,11 @@
                 </table>
             </div>
         </div>
-        
-        <div class="card-footer bg-white py-3 text-center" style="border-radius: 0 0 12px 12px; border-top: 1px solid #dee2e6;">
-            <small class="text-muted">Menampilkan penugasan periode {{ $bulanIndo[(int)$bulanDipilih] }} {{ $tahunSaatIni }}</small>
-        </div>
     </div>
 </div>
- 
-{{-- PANGGIL MODAL PREVIEW DI SINI --}}
-@include('kepala_bps.modal_detail')
+
+{{-- PANGGIL FILE MODAL DETAIL --}}
+@include('ppk.modal_detail')
  
 @endsection
  
@@ -155,22 +213,68 @@
 <script>
 document.addEventListener("DOMContentLoaded", function () {
     const btnLihatKontrak = document.querySelectorAll('.btn-lihat-kontrak');
-    const iframePreview = document.getElementById('iframePreviewKontrak');
  
-    if(btnLihatKontrak.length > 0 && iframePreview) {
+    // Fungsi pembantu untuk mengubah format tanggal YYYY-MM-DD menjadi DD Bulan YYYY (Indonesia)
+    function formatTanggalIndo(dateString) {
+        if(!dateString || dateString === '-') return '-';
+        const months = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
+        const date = new Date(dateString);
+        if (isNaN(date.getTime())) return dateString; // Jika sudah berformat lain, kembalikan teks aslinya
+        
+        return `${String(date.getDate()).padStart(2, '0')} ${months[date.getMonth()]} ${date.getFullYear()}`;
+    }
+
+    if(btnLihatKontrak.length > 0) {
         btnLihatKontrak.forEach(btn => {
             btn.addEventListener('click', function () {
-                const url = this.getAttribute('data-url');
-                iframePreview.src = url;
+                // 1. Isi Header Pop-up Modal (Gunakan Format Indonesia)
+                document.getElementById('detailNoSurat').textContent = this.dataset.nosurat;
+                document.getElementById('detailNamaMitra').textContent = this.dataset.mitra;
+                document.getElementById('detailBulan').textContent = this.dataset.bulan;
+                document.getElementById('detailTanggalSurat').textContent = formatTanggalIndo(this.dataset.tanggal);
+                
+                // 2. Isi Status Kontrak beserta Warnanya (Hijau Sukses Konsisten)
+                const statusBadge = document.getElementById('detailStatus');
+                const statusVal = this.dataset.status.toLowerCase();
+                statusBadge.textContent = this.dataset.status;
+                if(statusVal === 'disetujui' || statusVal === 'acc') {
+                    statusBadge.className = 'badge bg-success';
+                } else if(statusVal === 'ditolak') {
+                    statusBadge.className = 'badge bg-danger';
+                } else {
+                    statusBadge.className = 'badge bg-warning text-dark';
+                }
+
+                // 3. Format Total Honor ke Rupiah
+                document.getElementById('detailTotalHonor').textContent = new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(this.dataset.total);
+
+                // 4. Looping untuk Mengisi Tabel Rincian Pekerjaan di dalam Modal
+                const tbody = document.getElementById('tbodyDetailRincian');
+                tbody.innerHTML = ''; 
+                
+                const details = JSON.parse(this.dataset.details); 
+                
+                if(details.length > 0) {
+                    details.forEach((d, index) => {
+                        const tr = document.createElement('tr');
+                        tr.innerHTML = `
+                            <td class="text-center">${index + 1}</td>
+                            <td class="text-start fw-bold text-dark">${d.kegiatan}</td>
+                            <td class="text-center"><span class="badge bg-secondary">${d.peran}</span></td>
+                            <td class="text-center">${formatTanggalIndo(d.mulai)}</td>
+                            <td class="text-center">${formatTanggalIndo(d.selesai)}</td>
+                            <td class="text-center fw-bold">${d.volume}</td>
+                            <td class="text-center">${d.satuan}</td>
+                            <td class="text-end">Rp ${new Intl.NumberFormat('id-ID').format(d.harga)}</td>
+                            <td class="text-end fw-bold text-success">Rp ${new Intl.NumberFormat('id-ID').format(d.subtotal)}</td>
+                        `;
+                        tbody.appendChild(tr);
+                    });
+                } else {
+                    tbody.innerHTML = `<tr><td colspan="9" class="text-center text-muted py-4">Tidak ada rincian pekerjaan</td></tr>`;
+                }
             });
         });
- 
-        const modalDetailEl = document.getElementById('modalDetail');
-        if(modalDetailEl) {
-            modalDetailEl.addEventListener('hidden.bs.modal', function () {
-                iframePreview.src = "";
-            });
-        }
     }
 });
 </script>

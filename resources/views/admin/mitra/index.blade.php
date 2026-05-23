@@ -45,7 +45,7 @@
                 <thead class="table-primary text-center align-middle">
                 <tr>
                     <th class="py-3" style="width: 60px;">No.</th>
-                    <th class="py-3">Nama Petugas</th>
+                    <th class="py-3">Nama Mitra</th>
                     <th class="py-3">Posisi</th>
                     <th class="py-3">Email</th>
                     <th class="py-3">Nomor Telepon</th>
@@ -123,7 +123,26 @@
 <script>
 document.addEventListener('DOMContentLoaded', function () {
     
-    // --- LOGIKA MODAL EDIT/TAMBAH ---
+    // --- 1. LOGIKA AUTO-CLOSE ALERT ---
+    // Cari elemen pesan alert
+    let alertNode = document.querySelector('.alert');
+    
+    // Jika ada alert, jalankan timer
+    if (alertNode) {
+        setTimeout(function() {
+            // Buat animasi menghilang (fade out) perlahan
+            alertNode.style.transition = 'opacity 0.5s ease';
+            alertNode.style.opacity = '0';
+            
+            // Hapus elemen sepenuhnya dari halaman setelah animasi selesai
+            setTimeout(function() {
+                alertNode.remove();
+            }, 500);
+            
+        }, 5000); // 5000 ms = 5 detik.
+    }
+
+    // --- 2. LOGIKA MODAL EDIT/TAMBAH ---
     var modalMitra = document.getElementById('modalMitra');
     if(modalMitra) {
         modalMitra.addEventListener('show.bs.modal', function (event) {

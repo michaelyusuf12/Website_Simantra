@@ -42,9 +42,8 @@
                     <th class="py-3">Nama Kegiatan</th>
                     <th class="py-3">Penanggung Jawab</th>
                     <th class="py-3">Fungsi</th>
-                    <th class="py-3">Jenis</th>
+                    {{-- Kolom Jenis dan Periode Dihapus --}}
                     <th class="py-3">Honor per Dokumen</th>
-                    <th class="py-3">Periode</th>
                     <th class="py-3" style="width: 120px;">Aksi</th>
                 </tr>
             </thead>
@@ -54,24 +53,26 @@
                     <td class="text-center">{{ $loop->iteration + $kegiatans->firstItem() - 1 }}</td>
                     <td class="fw-medium">{{ $kegiatan->nama_kegiatan }}</td>
                     <td>{{ $kegiatan->penanggung_jawab }}</td> 
-                    <td class="text-center">{{ $kegiatan->fungsi }}</td>
                     <td class="text-center">
-                        <span class="badge {{ $kegiatan->jenis_kegiatan == 'Lapangan' ? 'bg-info' : 'bg-secondary' }}">
-                            {{ $kegiatan->jenis_kegiatan }}
-                        </span>
+                        <span class="badge bg-secondary">{{ $kegiatan->fungsi }}</span>
                     </td>
-                    <td class="text-end px-3">
-                        @if($kegiatan->jenis_kegiatan == 'Lapangan')
-                            <small class="text-muted d-block">PML: <b>Rp {{ number_format($kegiatan->honor_pml_per_dokumen ?? 0, 0, ',', '.') }}</b></small>
-                            <small class="text-muted d-block">PCL: <b>Rp {{ number_format($kegiatan->honor_pcl_per_dokumen ?? 0, 0, ',', '.') }}</b></small>
-                        @elseif($kegiatan->jenis_kegiatan == 'Pengolahan')
-                            <b>Rp {{ number_format($kegiatan->honor_pengolahan_per_dokumen ?? 0, 0, ',', '.') }}</b>
-                        @else
-                            <span class="text-muted">-</span>
+                    <td class="text-end px-4">
+                        {{-- Menampilkan Honor Secara Dinamis --}}
+                        @if($kegiatan->honor_pml_per_dokumen > 0)
+                            <small class="text-muted d-block" style="font-size: 0.85rem;">PML: <b class="text-dark">Rp {{ number_format($kegiatan->honor_pml_per_dokumen, 0, ',', '.') }}</b></small>
                         @endif
-                    </td>
-                    <td class="text-center small">
-                        {{ \Carbon\Carbon::parse($kegiatan->tgl_mulai)->format('d/m/Y') }}<br>s.d<br>{{ \Carbon\Carbon::parse($kegiatan->tgl_selesai)->format('d/m/Y') }}
+
+                        @if($kegiatan->honor_pcl_per_dokumen > 0)
+                            <small class="text-muted d-block" style="font-size: 0.85rem;">PCL: <b class="text-dark">Rp {{ number_format($kegiatan->honor_pcl_per_dokumen, 0, ',', '.') }}</b></small>
+                        @endif
+
+                        @if($kegiatan->honor_pengolahan_per_dokumen > 0)
+                            <small class="text-success d-block mt-1" style="font-size: 0.85rem;">Pengolahan: <b>Rp {{ number_format($kegiatan->honor_pengolahan_per_dokumen, 0, ',', '.') }}</b></small>
+                        @endif
+
+                        @if($kegiatan->honor_pml_per_dokumen == 0 && $kegiatan->honor_pcl_per_dokumen == 0 && $kegiatan->honor_pengolahan_per_dokumen == 0)
+                            <span class="text-muted fst-italic small">-</span>
+                        @endif
                     </td>
                     <td class="text-center">
                         <div class="d-flex justify-content-center gap-2">
@@ -109,7 +110,7 @@
                 </tr>
                 @empty
                 <tr> 
-                    <td colspan="8" class="text-center py-5 text-muted">
+                    <td colspan="6" class="text-center py-5 text-muted">
                         <i class="bi bi-inbox fs-1 d-block mb-3 text-secondary" style="opacity: 0.5;"></i>
                         Data kegiatan tidak ditemukan.
                     </td> 
@@ -131,53 +132,66 @@
 <script>
 document.addEventListener("DOMContentLoaded", function () {
     
-    // --- INISIALISASI VARIABEL FORM ---
-    const modalKegiatanElement = document.getElementById('modalKegiatan');
     const modalTitle = document.getElementById("modalTitle");
     const form = document.getElementById("formKegiatan");
     const formMethodInput = document.getElementById("formMethod");
     const kegiatanIdInput = document.getElementById("kegiatanId");
-    const jenisKegiatanSelect = document.getElementById('jenisKegiatan');
-    const inputHonorPML = document.getElementById('honor_pml_per_dokumen');
-    const inputHonorPCL = document.getElementById('honor_pcl_per_dokumen');
-    const inputHonorPengolahan = document.getElementById('honor_pengolahan_per_dokumen');
-    const targetDokumenInput = document.getElementById('targetDokumen');
-    const honorLapanganDiv = document.getElementById('honorLapanganFields');
-    const honorPengolahanDiv = document.getElementById('honorPengolahanFields');
 
-    // --- FUNGSI TOGGLE HONOR ---
-    function toggleHonorFields() {
-        if (!jenisKegiatanSelect || !honorLapanganDiv || !honorPengolahanDiv) return;
-        
-        const selectedJenis = jenisKegiatanSelect.value;
-        honorLapanganDiv.style.display = 'none';
-        honorPengolahanDiv.style.display = 'none';
-        
-        if (inputHonorPML) inputHonorPML.required = false;
-        if (inputHonorPCL) inputHonorPCL.required = false;
-        if (inputHonorPengolahan) inputHonorPengolahan.required = false;
+    // ==========================================
+    // 1. FUNGSI FORMAT RUPIAH OTOMATIS
+    // ==========================================
+    function formatRupiah(angka) {
+        // Hapus semua karakter selain angka
+        let number_string = angka.toString().replace(/[^,\d]/g, ''),
+            split = number_string.split(','),
+            sisa = split[0].length % 3,
+            rupiah = split[0].substr(0, sisa),
+            ribuan = split[0].substr(sisa).match(/\d{3}/gi);
 
-        if (selectedJenis === 'Lapangan') {
-            honorLapanganDiv.style.display = 'block';
-            if (inputHonorPML) inputHonorPML.required = true;
-            if (inputHonorPCL) inputHonorPCL.required = true;
-        } else if (selectedJenis === 'Pengolahan') {
-            honorPengolahanDiv.style.display = 'block';
-            if (inputHonorPengolahan) inputHonorPengolahan.required = true;
+        // Tambahkan titik jika yang diinput sudah menjadi angka ribuan
+        if (ribuan) {
+            let separator = sisa ? '.' : '';
+            rupiah += separator + ribuan.join('.');
         }
+        return rupiah;
     }
 
-    // --- EVENT TAMBAH DATA ---
+    // Pasang event listener ke semua input yang punya class 'input-rupiah'
+    document.querySelectorAll('.input-rupiah').forEach(function(input) {
+        input.addEventListener('input', function(e) {
+            // Format langsung saat diketik
+            this.value = formatRupiah(this.value);
+        });
+    });
+
+    // ==========================================
+    // 2. BERSIHKAN TITIK SEBELUM DISIMPAN KE DB
+    // ==========================================
+    form.addEventListener('submit', function() {
+        document.querySelectorAll('.input-rupiah').forEach(function(input) {
+            // Hapus titik sebelum form dikirim ke controller
+            input.value = input.value.replace(/\./g, '');
+        });
+    });
+
+    // ==========================================
+    // 3. EVENT TAMBAH DATA
+    // ==========================================
     document.querySelector(".btnTambah").addEventListener("click", function () {
         modalTitle.textContent = "Tambah Data Kegiatan";
         form.reset();
+        
+        document.getElementById("honor_pml_per_dokumen").value = 0;
+        document.getElementById("honor_pcl_per_dokumen").value = 0;
+        document.getElementById("honor_pengolahan_per_dokumen").value = 0;
+        document.getElementById("targetDokumen").value = 100;
+
         kegiatanIdInput.value = "";
         form.action = "{{ route('datakegiatan.store') }}";
         formMethodInput.value = "POST";
-        toggleHonorFields();
     });
 
-    // --- EVENT EDIT DATA ---
+// --- EVENT EDIT DATA ---
     document.querySelectorAll(".btnEdit").forEach(btn => {
         btn.addEventListener("click", function () {
             modalTitle.textContent = "Edit Data Kegiatan";
@@ -192,24 +206,24 @@ document.addEventListener("DOMContentLoaded", function () {
             document.getElementById("namaKegiatan").value = this.dataset.nama || '';
             document.getElementById("penanggungJawab").value = this.dataset.penanggung || '';
             document.getElementById("namaTim").value = this.dataset.tim || '';
-            if(targetDokumenInput) targetDokumenInput.value = this.dataset.target || '';
+            document.getElementById("targetDokumen").value = this.dataset.target || 100;
             document.getElementById("fungsi").value = this.dataset.fungsi || '';
-            if(jenisKegiatanSelect) jenisKegiatanSelect.value = this.dataset.jenis || '';
+            document.getElementById("jenisKegiatan").value = this.dataset.jenis || '';
+            
             document.getElementById("tanggalMulai").value = this.dataset.mulai || '';
             document.getElementById("tanggalSelesai").value = this.dataset.selesai || '';
             
-            if(inputHonorPML) inputHonorPML.value = this.dataset.honor_pml || '';
-            if(inputHonorPCL) inputHonorPCL.value = this.dataset.honor_pcl || '';
-            if(inputHonorPengolahan) inputHonorPengolahan.value = this.dataset.honor_pengolahan || '';
-            
-            toggleHonorFields();
+            //"15000.00" menjadi angka murni 15000 dengan Number() & Math.floor()
+            let pmlAsli = Math.floor(Number(this.dataset.honor_pml || 0));
+            let pclAsli = Math.floor(Number(this.dataset.honor_pcl || 0));
+            let pengolahanAsli = Math.floor(Number(this.dataset.honor_pengolahan || 0));
+
+            document.getElementById("honor_pml_per_dokumen").value = formatRupiah(pmlAsli);
+            document.getElementById("honor_pcl_per_dokumen").value = formatRupiah(pclAsli);
+            document.getElementById("honor_pengolahan_per_dokumen").value = formatRupiah(pengolahanAsli);
         });
     });
 
-    // Listen change on select inside modal
-    if(jenisKegiatanSelect){
-        jenisKegiatanSelect.addEventListener('change', toggleHonorFields);
-    }
 });
 </script>
 @endpush

@@ -5,15 +5,16 @@
 @section('content')
 <div class="container-fluid py-4">
     
-    {{-- Header & Filter Bulan --}}
+{{-- Header & Filter Bulan (Desain Premium Accordion) --}}
     @php
         $bulanIndo = [
             1 => 'Januari', 2 => 'Februari', 3 => 'Maret', 4 => 'April',
             5 => 'Mei', 6 => 'Juni', 7 => 'Juli', 8 => 'Agustus',
             9 => 'September', 10 => 'Oktober', 11 => 'November', 12 => 'Desember'
         ];
-        $bulanDipilih = request('month', date('n')); 
-        $tahunSaatIni = date('Y');
+        $bulanPilih = request('month', date('n')); 
+        $tahunPilih = request('year', date('Y'));
+        $listTahun = range(2024, date('Y') + 1); // List tahun otomatis
         
         // LOGIKA WARNA & STATUS PROGRESS BAR
         $sisaPagu = $paguMaksimum - $totalHonor;
@@ -27,12 +28,12 @@
         } elseif($persentase <= 85) {
             $warnaProg = 'bg-warning';
             $textProg = 'text-warning';
-            $statusTeks = 'WASPADA';
+            $statusTeks = 'HAMPIR MAKSIMAL';
             $statusDesc = 'Mendekati Batas Pagu';
         } else {
             $warnaProg = 'bg-danger';
             $textProg = 'text-danger';
-            $statusTeks = 'KRITIS';
+            $statusTeks = 'BATAS MAKSIMAL LIMIT';
             $statusDesc = 'Hampir Melewati Pagu';
         }
     @endphp
@@ -43,20 +44,40 @@
         </div>
         
         <div class="dropdown shadow-sm">
-            <button class="btn btn-white dropdown-toggle px-4 border bg-white" type="button" data-bs-toggle="dropdown" style="border-radius: 10px; font-weight: 500;">
-                <i class="bi bi-calendar3 me-2 text-primary"></i> 
-                {{ $bulanIndo[(int)$bulanDipilih] }} {{ $tahunSaatIni }}
+            <button class="btn btn-white dropdown-toggle border-primary bg-white fw-bold text-primary shadow-sm px-4" type="button" data-bs-toggle="dropdown" data-bs-auto-close="outside" aria-expanded="false" style="border-radius: 8px; height: 40px;">
+                <i class="bi bi-calendar3 me-2"></i> {{ $bulanIndo[(int)$bulanPilih] }} {{ $tahunPilih }}
             </button>
-            <ul class="dropdown-menu dropdown-menu-end shadow border-0" style="border-radius: 12px; max-height: 250px; overflow-y: auto;">
-                <li><h6 class="dropdown-header">Pilih Periode</h6></li>
-                @foreach($bulanIndo as $angka => $nama)
-                    <li>
-                        <a class="dropdown-item {{ $bulanDipilih == $angka ? 'active bg-primary text-white' : '' }}" href="?month={{ $angka }}">
-                            {{ $nama }}
-                        </a>
-                    </li>
-                @endforeach
-            </ul>
+            
+            <div class="dropdown-menu dropdown-menu-end p-3 shadow-lg border-0" style="width: 320px; border-radius: 12px;">
+                <div class="text-center mb-3 pb-2 border-bottom">
+                    <span class="fw-bold text-dark" style="font-size: 0.95rem;"><i class="bi bi-funnel-fill me-1 text-primary"></i> Pilih Tahun & Bulan</span>
+                </div>
+                
+                <div class="accordion accordion-flush" id="accordionTahunMitra">
+                    @foreach($listTahun as $th)
+                    <div class="accordion-item border-0 mb-2">
+                        <h2 class="accordion-header" id="heading-{{ $th }}">
+                            <button class="accordion-button {{ $tahunPilih == $th ? '' : 'collapsed' }} py-2 px-3 fw-bold rounded bg-light border shadow-sm" type="button" data-bs-toggle="collapse" data-bs-target="#collapse-mitra-{{ $th }}" style="font-size: 0.9rem;">
+                                Tahun {{ $th }}
+                            </button>
+                        </h2>
+                        <div id="collapse-mitra-{{ $th }}" class="accordion-collapse collapse {{ $tahunPilih == $th ? 'show' : '' }}" data-bs-parent="#accordionTahunMitra">
+                            <div class="accordion-body p-2 border border-top-0 rounded-bottom bg-white">
+                                <div class="row g-2">
+                                    @foreach($bulanIndo as $angka => $nama)
+                                    <div class="col-4">
+                                        <a href="?year={{ $th }}&month={{ $angka }}" class="btn btn-sm w-100 {{ ($tahunPilih == $th && $bulanPilih == $angka) ? 'btn-primary text-white fw-bold shadow' : 'btn-outline-primary' }}" style="font-size: 0.75rem; border-radius: 6px;">
+                                            {{ substr($nama, 0, 3) }}
+                                        </a>
+                                    </div>
+                                    @endforeach
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    @endforeach
+                </div>
+            </div>
         </div>
     </div>
  
@@ -158,22 +179,27 @@
 @endsection
 
 {{-- TAMBAHAN BARU: Script untuk menggambar Grafik --}}
+{{-- TAMBAHAN BARU: Script untuk menggambar Grafik --}}
 @push('scripts')
-<!-- Memanggil library Chart.js dari internet -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.0.0"></script>
 
 <script>
 document.addEventListener("DOMContentLoaded", function() {
-    // 1. Menentukan lokasi kanvas di HTML
+    // 1. Registrasi Plugin Datalabels secara global
+    Chart.register(ChartDataLabels);
+
+    // 2. Menentukan lokasi kanvas di HTML
     const ctx = document.getElementById('grafikPendapatanMitra').getContext('2d');
 
-    // 2. DATA DINAMIS (Dari Database)
+    // 3. DATA DINAMIS (Dari Database)
     const labelBulan = @json($labelBulanChart);
     const dataPendapatan = @json($dataHonorChart);
 
-    // 3. Konfigurasi Grafik Batang (Bar Chart)
+    // 4. Konfigurasi Grafik Batang (Bar Chart)
     new Chart(ctx, {
         type: 'bar',
+        plugins: [ChartDataLabels], // WAJIB ADA INI
         data: {
             labels: labelBulan,
             datasets: [{
@@ -187,13 +213,33 @@ document.addEventListener("DOMContentLoaded", function() {
         options: {
             responsive: true,
             maintainAspectRatio: false,
+            layout: {
+                padding: {
+                    top: 35 // [REVISI] Memberi ruang atas agar angka tidak terpotong
+                }
+            },
             plugins: {
                 legend: {
                     display: false // Menyembunyikan teks label di atas grafik agar rapi
                 },
+                // [REVISI] Konfigurasi Teks di atas batang
+                datalabels: {
+                    anchor: 'end',
+                    align: 'top',
+                    color: '#444',
+                    font: {
+                        weight: 'bold',
+                        size: 11
+                    },
+                    formatter: function(value) {
+                        if (value == 0) return ''; // Jangan tampilkan label jika 0
+                        if (value >= 1000000) return 'Rp ' + (value / 1000000).toLocaleString('id-ID') + ' Jt';
+                        if (value >= 1000) return 'Rp ' + (value / 1000).toLocaleString('id-ID') + ' Rb';
+                        return 'Rp ' + value.toLocaleString('id-ID');
+                    }
+                },
                 tooltip: {
                     callbacks: {
-                        // Membuat format angka rupiah saat grafik disentuh (di-hover)
                         label: function(context) {
                             let nilai = context.parsed.y;
                             return 'Rp ' + nilai.toLocaleString('id-ID');
@@ -205,7 +251,6 @@ document.addEventListener("DOMContentLoaded", function() {
                 y: {
                     beginAtZero: true,
                     ticks: {
-                        // Mempersingkat teks angka di sebelah kiri (Misal: 1000000 jadi 1 Jt)
                         callback: function(value) {
                             if(value >= 1000000) return 'Rp ' + (value/1000000) + ' Jt';
                             if(value >= 1000) return 'Rp ' + (value/1000) + ' Rb';

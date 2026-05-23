@@ -20,10 +20,11 @@
         /* Tabel untuk dompdf harus menggunakan width 100% dan border-collapse */
         table { width: 100%; border-collapse: collapse; margin-top: 15px; }
         th, td { border: 1px solid #000; padding: 6px; vertical-align: top; }
-        th { background-color: #f2f2f2; }
+        th { background-color: #f2f2f2; text-align: center; }
 
         .text-center { text-align: center; }
         .text-right { text-align: right; }
+        .text-left { text-align: left; }
         .text-bold { font-weight: bold; }
 
         /* Untuk tanda tangan, dompdf paling stabil menggunakan tabel */
@@ -51,31 +52,41 @@
     <table>
         <thead>
             <tr>
-                <th width="5%">No</th>
-                <th width="35%">Nama Kegiatan</th>
-                <th width="15%">Peran</th>
-                <th width="20%">Waktu Pelaksanaan</th>
-                <th width="10%">Vol</th>
-                <th width="15%">Subtotal</th>
+                <th width="4%">No</th>
+                <th width="26%">Nama Kegiatan</th>
+                <th width="12%">Peran</th>
+                <th width="16%">Waktu Pelaksanaan</th>
+                <th width="5%">Vol</th>
+                <th width="9%">Satuan</th>
+                <th width="14%">Harga Satuan</th>
+                <th width="14%">Subtotal</th>
             </tr>
         </thead>
         <tbody>
-            @foreach($penugasan->details as $index => $dt)
+            @forelse($penugasan->details as $index => $dt)
             <tr>
                 <td class="text-center">{{ $index + 1 }}</td>
-                <td>{{ $dt->kegiatan->Nama_kegiatan ?? $dt->kegiatan->nama_kegiatan ?? '-' }}</td>
+                <td class="text-left">{{ $dt->kegiatan->Nama_kegiatan ?? $dt->kegiatan->nama_kegiatan ?? '-' }}</td>
                 <td class="text-center">{{ $dt->uraian_tugas }}</td>
-                <td class="text-center">
-                    {{ \Carbon\Carbon::parse($dt->tanggal_mulai)->locale('id')->translatedFormat('d F') }} - 
-                    {{ \Carbon\Carbon::parse($dt->tanggal_selesai)->locale('id')->translatedFormat('d F Y') }}
+                <td class="text-center" style="font-size: 10pt;">
+                    {{ \Carbon\Carbon::parse($dt->tanggal_mulai)->locale('id')->translatedFormat('d M') }} - 
+                    {{ \Carbon\Carbon::parse($dt->tanggal_selesai)->locale('id')->translatedFormat('d M Y') }}
                 </td>
                 <td class="text-center">{{ $dt->volume }}</td>
-                <td class="text-right">{{ number_format($dt->volume * $dt->harga_satuan, 0, ',', '.') }}</td>
+                <td class="text-center">{{ $dt->satuan ?? 'Dokumen' }}</td>
+                <td class="text-right">Rp {{ number_format($dt->harga_satuan, 0, ',', '.') }}</td>
+                <td class="text-right text-bold">Rp {{ number_format($dt->volume * $dt->harga_satuan, 0, ',', '.') }}</td>
             </tr>
-            @endforeach
+            @empty
             <tr>
-                <td colspan="5" class="text-center text-bold">TOTAL HONORARIUM</td>
-                <td class="text-right text-bold">{{ number_format($penugasan->total_nilai_perjanjian, 0, ',', '.') }}</td>
+                <td colspan="8" class="text-center">Tidak ada rincian pekerjaan.</td>
+            </tr>
+            @endforelse
+            
+            {{-- Karena sekarang ada 8 kolom, colspan untuk total adalah 7 --}}
+            <tr>
+                <td colspan="7" class="text-right text-bold" style="background-color: #f2f2f2;">TOTAL HONORARIUM</td>
+                <td class="text-right text-bold" style="background-color: #f2f2f2;">Rp {{ number_format($penugasan->total_nilai_perjanjian, 0, ',', '.') }}</td>
             </tr>
         </tbody>
     </table>

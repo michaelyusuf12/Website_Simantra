@@ -19,9 +19,11 @@ class Kegiatan extends Model
         'nama_tim',
         'fungsi',
         'jenis_kegiatan',
+        'target_dokumen', // Pastikan target dokumen tidak lupa dimasukkan
         'tgl_mulai',
         'tgl_selesai',
-        'target_dokumen',
+        
+        // 👇 INI YANG TADI TERLUPA 👇
         'honor_pcl_per_dokumen',       
         'honor_pml_per_dokumen',       
         'honor_pengolahan_per_dokumen', 

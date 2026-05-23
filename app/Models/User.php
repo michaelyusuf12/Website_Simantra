@@ -45,4 +45,14 @@ class User extends Authenticatable
     {
         return 'username';
     }
+
+   
+    /**
+     * Relasi ke tabel Mitras (Jika User ini adalah Mitra)
+     */
+    public function dataMitra()
+    {
+        // Hubungkan tabel users dan mitras melalui kunci utama 'id_user'
+        return $this->hasOne(Mitra::class, 'id_user', 'id_user');
+    }
 }

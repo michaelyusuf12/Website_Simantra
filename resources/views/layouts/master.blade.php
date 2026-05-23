@@ -29,23 +29,21 @@
                 $userRole = auth()->user()->role;
                 
                 // MENENTUKAN LINK BERANDA
-                $berandaLink = route('beranda'); // Default Admin
+                $berandaLink = route('beranda'); // Default untuk Admin, Kepala BPS, dan PPK
                 if($userRole == 'mitra') $berandaLink = route('mitra.beranda'); 
-                if($userRole == 'kepala') $berandaLink = route('kepala.beranda');
-                
-                // UBAH BARIS INI: Arahkan ke pegawai.beranda, bukan kelolakegiatan.index
-                //if($userRole == 'pegawai') $berandaLink = route('pegawai.beranda'); 
+                if($userRole == 'pegawai') $berandaLink = route('pegawai.beranda');
+                if($userRole == 'ppk') $berandaLink = route('ppk.beranda');
             @endphp
 
-            {{-- MENU BERANDA --}}
+            {{-- MENU BERANDA (Semua Aktor) --}}
             <li class="nav-item"> 
                 <a href="{{ $berandaLink }}" 
-                   class="nav-link {{ (request()->routeIs('beranda') || request()->routeIs('mitra.beranda') || request()->routeIs('mitra.dashboard') || request()->routeIs('kepala.beranda') || request()->routeIs('pegawai.beranda')) ? 'active bg-white text-primary rounded shadow-sm' : 'text-white' }}">
+                   class="nav-link {{ (request()->routeIs('beranda') || request()->routeIs('mitra.beranda') || request()->routeIs('pegawai.beranda') || request()->routeIs('ppk.beranda')) ? 'active bg-white text-primary rounded shadow-sm' : 'text-white' }}">
                     <i class="bi bi-house-door-fill me-2"></i> Beranda
                 </a> 
             </li>
 
-            {{-- MENU KHUSUS ADMIN (INI YANG SEBELUMNYA HILANG) --}}
+{{-- MENU KHUSUS ADMIN --}}
             @if($userRole == 'admin')
                 <li class="nav-item"> 
                     <a href="{{ route('mitra.index') }}" class="nav-link {{ request()->routeIs('mitra.*') ? 'active bg-white text-primary rounded shadow-sm' : 'text-white' }}">
@@ -53,28 +51,26 @@
                     </a> 
                 </li>
                 <li class="nav-item"> 
-                    <a href="{{ route('datakegiatan.index') }}" class="nav-link {{ request()->routeIs('datakegiatan.*') ? 'active bg-white text-primary rounded shadow-sm' : 'text-white' }}">
-                        <i class="bi bi-calendar-check-fill me-2"></i> Data Kegiatan
-                    </a> 
-                </li>
-                <li class="nav-item"> 
                     <a href="{{ route('pegawai.index') }}" class="nav-link {{ request()->routeIs('pegawai.*') ? 'active bg-white text-primary rounded shadow-sm' : 'text-white' }}">
                         <i class="bi bi-person-badge-fill me-2"></i> Data Pegawai
                     </a> 
                 </li>
-                <li class="nav-item"> 
-                    <a href="{{ route('settings.index') }}" class="nav-link {{ request()->routeIs('settings.*') ? 'active bg-white text-primary rounded shadow-sm' : 'text-white' }}">
-                        <i class="bi bi-gear-fill me-2"></i> Pengaturan
-                    </a> 
+            @endif
+
+            {{-- MENU DATA KEGIATAN (Diakses oleh Admin dan Pegawai) --}}
+            @if($userRole == 'admin' || $userRole == 'pegawai')
+                <li class="nav-item">
+                    <a class="nav-link {{ request()->is('datakegiatan*') ? 'active bg-white text-primary rounded shadow-sm' : 'text-white' }}" href="{{ route('datakegiatan.index') }}">
+                        <i class="bi bi-card-list me-2"></i> Data Kegiatan
+                    </a>
                 </li>
             @endif
 
-            {{-- MENU KHUSUS MITRA --}}
-            @if($userRole == 'mitra')
+            {{-- MENU PENGATURAN --}}
+            @if($userRole == 'admin')
                 <li class="nav-item"> 
-                    <a href="{{ route('mitra.riwayat') }}" 
-                       class="nav-link {{ request()->routeIs('mitra.riwayat') ? 'active bg-white text-primary rounded shadow-sm' : 'text-white' }}">
-                        <i class="bi bi-clipboard-data-fill me-2"></i> Riwayat Penugasan
+                    <a href="{{ route('settings.index') }}" class="nav-link {{ request()->routeIs('settings.*') ? 'active bg-white text-primary rounded shadow-sm' : 'text-white' }}">
+                        <i class="bi bi-gear-fill me-2"></i> Pengaturan
                     </a> 
                 </li>
             @endif
@@ -89,11 +85,24 @@
                 </li>
             @endif
 
-            {{-- MENU KHUSUS KEPALA BPS --}}
-            @if($userRole == 'kepala')
+            {{-- MENU KHUSUS MITRA --}}
+            @if($userRole == 'mitra')
                 <li class="nav-item"> 
-                    <a href="{{ route('kepala.approval') }}" 
-                        class="nav-link {{ request()->routeIs('kepala.approval') ? 'active bg-white text-primary rounded shadow-sm' : 'text-white' }}">
+                    <a href="{{ route('mitra.riwayat') }}" 
+                       class="nav-link {{ request()->routeIs('mitra.riwayat') ? 'active bg-white text-primary rounded shadow-sm' : 'text-white' }}">
+                        <i class="bi bi-clipboard-data-fill me-2"></i> Riwayat Penugasan
+                    </a> 
+                </li>
+            @endif
+
+            {{-- MENU KHUSUS KEPALA BPS (Bisa digabung dengan yang lain jika nanti butuh menu tambahan) --}}
+            {{-- Kepala BPS saat ini hanya butuh menu Beranda --}}
+
+            {{-- MENU KHUSUS PPK --}}
+            @if($userRole == 'ppk')
+                <li class="nav-item"> 
+                    <a href="{{ route('ppk.approval') }}" 
+                        class="nav-link {{ request()->routeIs('ppk.approval') ? 'active bg-white text-primary rounded shadow-sm' : 'text-white' }}">
                             <i class="bi bi-file-earmark-check me-2"></i> Approval Kontrak
                     </a>
                 </li>
@@ -121,13 +130,11 @@
 
     {{-- Konten --}}
     <div class="flex-grow-1 p-4" style="overflow-y: auto; height: calc(100vh - 56px);"> 
-        
         @yield('content')
     </div>
   </div>
 
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-  
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
 <script>
@@ -167,11 +174,9 @@ document.addEventListener("DOMContentLoaded", function () {
     
     btnHapusSweet.forEach(button => {
         button.addEventListener('click', function(e) {
-            e.preventDefault(); // Mencegah halaman langsung beralih/ter-submit
+            e.preventDefault();
             
             const formHapus = this.closest('.form-hapus'); 
-            
-            // Mengambil nama kustom dari atribut HTML jika ada, jika tidak pakai teks default
             const namaData = this.getAttribute('data-name') || 'Data ini';
 
             Swal.fire({
@@ -185,7 +190,7 @@ document.addEventListener("DOMContentLoaded", function () {
                 cancelButtonText: 'Batal'
             }).then((result) => {
                 if (result.isConfirmed) {
-                    formHapus.submit(); // Eksekusi penghapusan jika dikonfirmasi
+                    formHapus.submit(); 
                 }
             });
         });
@@ -193,7 +198,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
 });
 </script>
-  {{-- SANGAT PENTING: Tempat untuk menampung script dari halaman lain --}}
+  {{-- Tempat untuk menampung script dari halaman lain --}}
   @stack('scripts')
   
 </body>

@@ -25,11 +25,12 @@
 
                     <div class="mb-3">
                         <label for="password" class="form-label">Password</label>
-                        <input type="password" class="form-control @error('password') is-invalid @enderror" id="password" name="password" required minlength="6">
+                        {{-- HAPUS atribut 'required' dari sini agar tidak bentrok dengan JS saat proses Edit --}}
+                        <input type="password" class="form-control @error('password') is-invalid @enderror" id="password" name="password" minlength="6">
                         @error('password')
                             <div class="invalid-feedback">{{ $message }}</div>
                         @else
-                            <small class="form-text text-muted">Minimal 6 karakter.</small>
+                            <small class="form-text text-muted">Minimal 6 karakter. <span class="text-warning fw-bold">Kosongkan saat edit jika tidak ingin mengubah password.</span></small>
                         @enderror
                     </div>
                     
@@ -40,11 +41,12 @@
                     </div>
 
                     <div class="mb-3">
-                        <label for="role" class="form-label">Role Akses</label>
-                        <select id="role" name="role" class="form-select @error('role') is-invalid @enderror" required>
-                            <option value="" disabled {{ old('role') ? '' : 'selected' }}>-- Pilih Role --</option>
-                            <option value="admin" {{ old('role') == 'admin' ? 'selected' : '' }}>Admin</option>
-                            <option value="pegawai" {{ old('role') == 'pegawai' ? 'selected' : '' }}>Pegawai</option>
+                        <label class="form-label">Role Akses</label>
+                        <select id="role" name="role" class="form-select" required>                            <option value="">-- Pilih Role --</option>
+                            <option value="admin">Admin</option>
+                            <option value="pegawai">Pegawai</option>
+                            <option value="ppk">PPK (Pejabat Pembuat Komitmen)</option>
+                            <option value="kepala_bps">Kepala BPS</option>
                         </select>
                         @error('role') <div class="invalid-feedback">{{ $message }}</div> @enderror
                     </div>

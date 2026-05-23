@@ -16,9 +16,10 @@ class ProfilController extends Controller
      */
     public function index()
     {
-        return view('profil.index', [
-            'user' => Auth::user()
-        ]);
+        // Panggil User beserta relasi data mitra-nya sekaligus
+        $user = Auth::user()->load('dataMitra');
+        
+        return view('profil.index', compact('user'));
     }
 
     /**
@@ -101,8 +102,8 @@ class ProfilController extends Controller
             'password.confirmed' => 'Konfirmasi password baru tidak cocok.',
         ]);
 
-        $user = User::find(Auth::id());
-
+        $user = auth()->user();
+        
         // Cek apakah password lama yang diketik sama dengan di database
         if (!Hash::check($request->current_password, $user->password)) {
             return back()->withErrors(['current_password' => 'Password lama salah.']);
@@ -114,4 +115,6 @@ class ProfilController extends Controller
 
         return back()->with('success', 'Password berhasil diganti.');
     }
+
+    
 }

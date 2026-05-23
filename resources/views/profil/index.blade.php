@@ -72,25 +72,25 @@
 
                         <hr class="my-4 opacity-25">
 
-                        {{-- JIKA MITRA: Tampilkan data dari tabel Mitras --}}
+{{-- JIKA MITRA: Tampilkan data dari tabel Mitras --}}
                         @if($user->role == 'mitra')
-                            @php
-                                $dataMitra = \App\Models\Mitra::where('sobat_id', $user->username)->first();
-                            @endphp
                             <div class="row mb-3">
                                 <div class="col-md-6">
-                                    <label class="form-label small text-muted">WhatsApp</label>
-                                    <input type="text" class="form-control bg-light border-0" value="{{ $dataMitra->telepon ?? '-' }}" readonly>
+                                    <label class="form-label small text-muted">No Telepon</label>
+                                    <input type="text" class="form-control bg-light border-0" 
+                                           value="{{ $user->dataMitra ? $user->dataMitra->telepon : '-' }}" readonly>
                                 </div>
                                 <div class="col-md-6">
                                     <label class="form-label small text-muted">Email</label>
-                                    <input type="text" class="form-control bg-light border-0" value="{{ $dataMitra->email ?? '-' }}" readonly>
+                                    <input type="text" class="form-control bg-light border-0" 
+                                           value="{{ $user->dataMitra ? $user->dataMitra->email : '-' }}" readonly>
                                 </div>
                             </div>
                             <div class="mb-3">
                                 <label class="form-label small text-muted">Alamat</label>
-                                <textarea class="form-control bg-light border-0" rows="2" readonly>{{ $dataMitra->alamat ?? '-' }}</textarea>
+                                <textarea class="form-control bg-light border-0" rows="2" readonly>{{ $user->dataMitra ? $user->dataMitra->alamat : '-' }}</textarea>
                             </div>
+
 
                         {{-- JIKA PEGAWAI/ADMIN: Tampilkan NIP --}}
                         @else

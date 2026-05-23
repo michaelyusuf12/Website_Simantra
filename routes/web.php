@@ -47,32 +47,38 @@ Route::middleware('auth')->group(function () {
     // --- RUTE KHUSUS PEGAWAI ---
     Route::middleware('role:pegawai')->group(function () {
         Route::get('/pegawai-beranda', function () { return view('pegawai.beranda'); })->name('pegawai.beranda');
-        Route::get('/kelolakegiatan/cek-akumulasi', [App\Http\Controllers\KelolaKegiatanController::class, 'cekAkumulasi'])->name('kelolakegiatan.cekAkumulasi');
-        Route::resource('kelolakegiatan', KelolaKegiatanController::class);
+        Route::get('/kelolakegiatan/cek-akumulasi', [KelolaKegiatanController::class, 'cekAkumulasi'])->name('kelolakegiatan.cekAkumulasi');
         
-        // Rute untuk cek akumulasi honor via AJAX
+        // [PERBAIKAN] Pindahkan route EXPORT ke dalam grup pegawai agar rapi
+        Route::post('/kelolakegiatan/export', [KelolaKegiatanController::class, 'exportExcel'])->name('kelolakegiatan.export');
+        
+        Route::resource('kelolakegiatan', KelolaKegiatanController::class);
     });
 
     // --- RUTE KHUSUS MITRA ---
     Route::middleware('role:mitra')->group(function () {
         Route::get('/mitra-beranda', [\App\Http\Controllers\MitraPanelController::class, 'beranda'])->name('mitra.beranda');
         Route::get('/mitra-riwayat', [\App\Http\Controllers\MitraPanelController::class, 'riwayat'])->name('mitra.riwayat');
+        
     });
 
-    // --- RUTE KHUSUS KEPALA BPS ---
-    Route::middleware('role:kepala')->group(function () {
-        Route::get('/kepala-beranda', [App\Http\Controllers\BerandaController::class, 'index'])->name('kepala.beranda');        Route::get('/kepala/approval-kontrak', [ApprovalController::class, 'index'])->name('kepala.approval');
-        Route::post('/kepala/approval-kontrak/{id}/approve', [ApprovalController::class, 'approve'])->name('kepala.approval.approve');
-        Route::post('/kepala/approval-kontrak/{id}/reject', [ApprovalController::class, 'reject'])->name('kepala.approval.reject');
-        Route::post('/kepala/approval-kontrak/bulk-approve', [ApprovalController::class, 'bulkApprove'])->name('kepala.approval.bulkApprove');
+    // --- RUTE KHUSUS PPK ---
+        Route::middleware('role:ppk')->group(function () {
+        Route::get('/ppk-beranda', [BerandaController::class, 'index'])->name('ppk.beranda'); 
+        Route::get('/ppk/approval/show/{id}', [ApprovalController::class, 'show'])->name('ppk.approval.show');
+    
+    // [PERBAIKAN] Baris dirapikan ke bawah
+        Route::get('/ppk/approval-kontrak', [ApprovalController::class, 'index'])->name('ppk.approval');
+        Route::post('/ppk/approval-kontrak/{id}/approve', [ApprovalController::class, 'approve'])->name('ppk.approval.approve');
+        Route::post('/ppk/approval-kontrak/{id}/reject', [ApprovalController::class, 'reject'])->name('ppk.approval.reject');
+        Route::post('/ppk/approval-kontrak/bulk-approve', [ApprovalController::class, 'bulkApprove'])->name('ppk.approval.bulkApprove');
+        
+        Route::get('/ppk/approval/cetak', [ApprovalController::class, 'cetakLaporan'])->name('ppk.approval.cetak');
     });
 
-    // Rute untuk mengambil data detail penugasan via AJAX
-    Route::get('/kelolakegiatan/{id}/detail', [App\Http\Controllers\KelolaKegiatanController::class, 'show'])->name('kelolakegiatan.show');
-
-    // Rute untuk mencetak SPK
-    Route::get('/kelolakegiatan/{id}/cetak', [App\Http\Controllers\KelolaKegiatanController::class, 'cetak'])->name('kelolakegiatan.cetak');
-    // Rute Cetak Laporan 
-    Route::get('/kepala/approval/cetak', [App\Http\Controllers\ApprovalController::class, 'cetakLaporan'])->name('kepala.approval.cetak');
-
+    // RUTE GLOBAL AKSES (Bisa diakses Pegawai & Admin)
+    Route::resource('datakegiatan', DataKegiatanController::class);
+    
+    Route::get('/kelolakegiatan/show/{id}', [KelolaKegiatanController::class, 'show'])->name('kelolakegiatan.show');
+    Route::get('/kelolakegiatan/{id}/cetak', [KelolaKegiatanController::class, 'cetak'])->name('kelolakegiatan.cetak');
 });

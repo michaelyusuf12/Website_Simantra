@@ -64,11 +64,9 @@
                 {{-- Pencarian --}}
                 <div class="col-md-4 offset-md-2">
                     <label class="form-label small fw-bold text-muted">Cari Dokumen</label>
-                    <form action="{{ route('kepala.approval') }}" method="GET">
-                        {{-- Menyimpan status filter bulan & dokumen saat ini agar tidak tereset saat mencari --}}
+                    <form action="{{ route('ppk.approval') }}" method="GET">
                         <input type="hidden" name="month" value="{{ request('month', date('n')) }}">
                         <input type="hidden" name="status" value="{{ request('status', 'menunggu') }}">
-                        
                         <div class="input-group">
                             <input type="text" name="search" class="form-control bg-light border-0" placeholder="Cari nama mitra atau kegiatan..." value="{{ request('search') }}">
                             <button class="btn btn-primary px-3" type="submit">
@@ -91,11 +89,10 @@
             
             {{-- Tombol Cetak Laporan & Persetujuan Massal --}}
             <div class="d-flex gap-2">
-                {{-- Tombol Cetak PDF --}}
-                <a href="{{ route('kepala.approval.cetak', ['month' => request('month', date('n')), 'status' => request('status', 'menunggu'), 'search' => request('search')]) }}" 
-                   target="_blank" 
-                   class="btn btn-outline-secondary shadow-sm rounded-pill px-3 fw-bold">
-                    <i class="bi bi-printer-fill me-1"></i> Cetak PDF
+                {{-- Tombol Export Excel (Revisi BPS) --}}
+                <a href="{{ route('ppk.approval.cetak', ['month' => request('month', date('n')), 'status' => request('status', 'menunggu'), 'search' => request('search')]) }}" 
+                   class="btn btn-outline-success shadow-sm rounded-pill px-3 fw-bold">
+                    <i class="bi bi-file-earmark-excel-fill me-1"></i> Export Excel
                 </a>
 
                 {{-- Tombol Persetujuan Massal --}}
@@ -146,30 +143,36 @@
                             
                             <td class="text-end fw-bold text-primary">Rp {{ number_format($p->total_nilai_perjanjian, 0, ',', '.') }}</td>
                             <td class="text-center">
-                                <div class="d-flex justify-content-center gap-1">
-                                    <button class="btn btn-sm btn-outline-info border-0 shadow-sm btn-lihat-kontrak" 
-                                        title="Preview Dokumen" 
-                                        data-bs-toggle="modal" 
-                                        data-bs-target="#modalDetail"
-                                        data-url="{{ route('kelolakegiatan.cetak', $p->id_penugasan ?? $p->id) }}?preview=true">
-                                        <i class="bi bi-eye-fill"></i>
-                                    </button>
-
-                                    <form action="{{ route('kepala.approval.approve', $p->id_penugasan ?? $p->id) }}" method="POST" class="d-inline form-setuju-dokumen">
-                                        @csrf
-                                        <button type="submit" class="btn btn-sm btn-success border-0 shadow-sm text-white" title="Setujui">
-                                            <i class="bi bi-check-lg"></i>
+                                    <div class="d-flex justify-content-center gap-1">
+                                        
+                                        {{-- Tombol Preview (Mata) --}}
+                                        <button class="btn btn-sm btn-outline-info border-0 shadow-sm btn-lihat-kontrak" 
+                                                title="Preview Dokumen" 
+                                                data-bs-toggle="modal" 
+                                                data-bs-target="#modalDetail"
+                                                data-id="{{ $p->id_penugasan ?? $p->id }}" 
+                                                data-url="{{ route('ppk.approval.show', $p->id_penugasan ?? $p->id) }}">
+                                            <i class="bi bi-eye-fill"></i>
                                         </button>
-                                    </form>
+                                        
+                                        {{-- [PERBAIKAN] Tombol Setujui dengan Tag Form Pembuka yang Benar --}}
+                                        <form action="{{ route('ppk.approval.approve', $p->id_penugasan ?? $p->id) }}" method="POST" class="d-inline form-setuju-dokumen">
+                                            @csrf
+                                            <button type="submit" class="btn btn-sm btn-success border-0 shadow-sm text-white" title="Setujui">
+                                                <i class="bi bi-check-lg"></i>
+                                            </button>
+                                        </form>
 
-                                    <form action="{{ route('kepala.approval.reject', $p->id_penugasan ?? $p->id) }}" method="POST" class="d-inline form-tolak-dokumen">
-                                        @csrf
-                                        <button type="submit" class="btn btn-sm btn-danger border-0 shadow-sm text-white" title="Tolak">
-                                            <i class="bi bi-x-lg"></i>
-                                        </button>
-                                    </form>
-                                </div>
-                            </td>
+                                        {{-- Tombol Tolak --}}
+                                        <form action="{{ route('ppk.approval.reject', $p->id_penugasan ?? $p->id) }}" method="POST" class="d-inline form-tolak-dokumen">
+                                            @csrf
+                                            <button type="submit" class="btn btn-sm btn-danger border-0 shadow-sm text-white" title="Tolak">
+                                                <i class="bi bi-x-lg"></i>
+                                            </button>
+                                        </form>
+
+                                    </div>
+                                </td>
                         </tr>
                         @empty
                         <tr>
@@ -188,13 +191,13 @@
 </div>
 
 {{-- Form Tersembunyi untuk Bulk Approve --}}
-<form id="formBulkApprove" action="{{ route('kepala.approval.bulkApprove') }}" method="POST" style="display: none;">
+<form id="formBulkApprove" action="{{ route('ppk.approval.bulkApprove') }}" method="POST" style="display: none;">
     @csrf
     <div id="bulkIdsInputContainer"></div>
 </form>
 
 {{-- PANGGIL FILE MODAL DI SINI --}}
-@include('kepala_bps.modal_detail')
+@include('ppk.modal_detail')
 
 @endsection
 
@@ -225,23 +228,92 @@ document.addEventListener("DOMContentLoaded", function () {
         });
     });
 
-    // --- 2. FUNGSI PREVIEW KONTRAK IFRAME ---
+// --- 2. FUNGSI PREVIEW KONTRAK MODAL MODERN (Revisi BPS) ---
     const btnLihatKontrak = document.querySelectorAll('.btn-lihat-kontrak');
-    const iframePreview = document.getElementById('iframePreviewKontrak');
+    const tbodyRincian = document.getElementById('tbodyDetailRincian');
 
     btnLihatKontrak.forEach(btn => {
         btn.addEventListener('click', function () {
             const url = this.getAttribute('data-url');
-            iframePreview.src = url;
+            
+            // Tampilkan Loading di Modal
+            document.getElementById('detailNoSurat').innerText = 'Loading...';
+            document.getElementById('detailNamaMitra').innerText = 'Loading...';
+            document.getElementById('detailBulan').innerText = 'Loading...';
+            document.getElementById('detailTanggalSurat').innerText = 'Loading...';
+            document.getElementById('detailStatus').innerText = 'Loading...';
+            document.getElementById('detailTotalHonor').innerText = 'Loading...';
+            tbodyRincian.innerHTML = '<tr><td colspan="9" class="text-center py-4"><div class="spinner-border text-primary" role="status"></div><br>Mengambil data...</td></tr>';
+
+            // Ambil Data via Fetch AJAX
+            fetch(url)
+                .then(response => response.json())
+                .then(res => {
+                    if (res.status === 'success') {
+                        const data = res.data;
+                        
+                        // Format Uang Rupiah
+                        const formatRp = (angka) => new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(angka);
+                        
+                        // Format Tanggal (Contoh: 2026-05-21 jadi 21/05/2026)
+                        const formatTgl = (tglStr) => {
+                            if(!tglStr) return '-';
+                            const t = new Date(tglStr);
+                            return `${t.getDate().toString().padStart(2, '0')}/${(t.getMonth()+1).toString().padStart(2, '0')}/${t.getFullYear()}`;
+                        };
+
+                        // Isi Header Modal
+                        document.getElementById('detailNoSurat').innerText = data.no_surat || 'Belum ada nomor';
+                        document.getElementById('detailNamaMitra').innerText = data.mitra ? data.mitra.nama_petugas : '-';
+                        document.getElementById('detailBulan').innerText = data.bulan_kegiatan || '-';
+                        document.getElementById('detailTanggalSurat').innerText = formatTgl(data.created_at);
+                        
+                        const statusEl = document.getElementById('detailStatus');
+                        statusEl.innerText = data.status_kontrak;
+                        if(data.status_kontrak === 'Disetujui') statusEl.className = 'badge bg-success';
+                        else if(data.status_kontrak === 'Ditolak') statusEl.className = 'badge bg-danger';
+                        else statusEl.className = 'badge bg-warning text-dark';
+                        
+                        document.getElementById('detailTotalHonor').innerText = formatRp(data.total_nilai_perjanjian);
+
+                        // Isi Tabel Rincian
+                        tbodyRincian.innerHTML = '';
+                        if (data.details && data.details.length > 0) {
+                            data.details.forEach((item, idx) => {
+                                const namaKeg = item.kegiatan ? (item.kegiatan.nama_kegiatan || item.kegiatan.Nama_kegiatan) : '-';
+                                const tglMulai = formatTgl(item.tanggal_mulai);
+                                const tglSelesai = formatTgl(item.tanggal_selesai);
+                                const harga = formatRp(item.harga_satuan);
+                                const subtotal = formatRp(item.harga_satuan * item.volume);
+                                
+                                const tr = `
+                                    <tr>
+                                        <td class="text-center">${idx + 1}</td>
+                                        <td class="fw-bold">${namaKeg}</td>
+                                        <td class="text-center"><span class="badge bg-secondary">${item.uraian_tugas}</span></td>
+                                        <td class="text-center">${tglMulai}</td>
+                                        <td class="text-center">${tglSelesai}</td>
+                                        <td class="text-center fw-bold">${item.volume}</td>
+                                        <td class="text-center">${item.satuan || 'Dokumen'}</td>
+                                        <td class="text-end">${harga}</td>
+                                        <td class="text-end fw-bold text-success">${subtotal}</td>
+                                    </tr>
+                                `;
+                                tbodyRincian.insertAdjacentHTML('beforeend', tr);
+                            });
+                        } else {
+                            tbodyRincian.innerHTML = '<tr><td colspan="9" class="text-center text-muted py-3">Tidak ada rincian kegiatan</td></tr>';
+                        }
+                    } else {
+                        tbodyRincian.innerHTML = `<tr><td colspan="9" class="text-center text-danger py-3">Gagal memuat data: ${res.message}</td></tr>`;
+                    }
+                })
+                .catch(err => {
+                    console.error('Error Fetch:', err);
+                    tbodyRincian.innerHTML = '<tr><td colspan="9" class="text-center text-danger py-3">Terjadi kesalahan koneksi saat mengambil data.</td></tr>';
+                });
         });
     });
-
-    const modalDetailEl = document.getElementById('modalDetail');
-    if(modalDetailEl) {
-        modalDetailEl.addEventListener('hidden.bs.modal', function () {
-            iframePreview.src = "";
-        });
-    }
 
     // --- 3. FUNGSI SWEETALERT UNTUK TOMBOL SETUJUI (HIJAU) ---
     const formSetuju = document.querySelectorAll('.form-setuju-dokumen');

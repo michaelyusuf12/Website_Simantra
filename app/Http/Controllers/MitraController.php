@@ -40,7 +40,7 @@ class MitraController extends Controller
 
     public function store(Request $request)
     {
-        // 1. Validasi Input (Termasuk Username & Password)
+       // 1. Validasi Input (Termasuk Username & Password)
         $request->validate([
             'nama_petugas' => 'required|string|max:255',
             'email' => 'required|email|unique:mitras,email',
@@ -52,12 +52,15 @@ class MitraController extends Controller
             'kode_kab' => 'nullable|string',
             
             // Validasi Akun Login
-            'username' => 'required|string|unique:users,username', 
+            'username' => 'required|email|unique:users,username', 
             'password' => 'required|string|min:6',
+        ], [
+            //PESAN KUSTOM DI SINI
+            'username.email' => 'Format Username untuk Mitra harus berupa alamat email yang valid (contoh: nama@gmail.com).',
+            'username.unique' => 'Email/Username tersebut sudah digunakan oleh akun lain.',
         ]);
 
         // 2. Mulai Transaksi (Satu Form, Dua Tabel)
-// 2. Mulai Transaksi (Satu Form, Dua Tabel)
         DB::transaction(function () use ($request) {
             
             // LANGKAH A: Buat Akun di tabel users (Cara Manual)
@@ -88,6 +91,7 @@ class MitraController extends Controller
     public function update(Request $request, Mitra $mitra)
     {
         // 1. Validasi Input Update
+// 1. Validasi Input Update
         $request->validate([
             'nama_petugas' => 'required|string|max:255',
             'email' => 'required|email|unique:mitras,email,' . $mitra->sobat_id . ',sobat_id', 
@@ -99,8 +103,12 @@ class MitraController extends Controller
             'kode_kab' => 'nullable|string',
             
             // Validasi Akun Login (Kecualikan ID user yang sedang diubah)
-            'username' => 'required|string|unique:users,username,' . $mitra->id_user . ',id_user', 
+            'username' => 'required|email|unique:users,username,' . $mitra->id_user . ',id_user', 
             'password' => 'nullable|string|min:6', // Password boleh kosong saat edit
+        ], [
+            // PESAN KUSTOM DI SINI
+            'username.email' => 'Format Username untuk Mitra harus berupa alamat email yang valid (contoh: nama@gmail.com).',
+            'username.unique' => 'Email/Username tersebut sudah digunakan oleh akun lain.',
         ]);
 
         // 2. Mulai Transaksi Update

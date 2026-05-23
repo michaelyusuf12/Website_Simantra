@@ -1,5 +1,5 @@
-{{-- MODAL LIHAT DETAIL --}}
-<div class="modal fade" id="modalDetailPenugasan" tabindex="-1" aria-hidden="true">
+{{-- MODAL LIHAT DETAIL (Revisi Gaya Pegawai) --}}
+<div class="modal fade" id="modalDetail" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-xl" style="max-width: 80%;">
         <div class="modal-content border-0 shadow-lg" style="border-radius: 15px;">
             <div class="modal-header bg-primary text-white py-3" style="border-radius: 15px 15px 0 0;">
@@ -45,8 +45,7 @@
                                         <th>Tgl Mulai</th>
                                         <th>Tgl Selesai</th>
                                         <th>Volume</th>
-                                        <th>Satuan</th>
-                                        <th>Harga (Rp)</th>
+                                        <th>Satuan</th> <th>Harga (Rp)</th>
                                         <th>Subtotal (Rp)</th>
                                     </tr>
                                 </thead>

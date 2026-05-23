@@ -21,7 +21,7 @@
                             
                             {{-- TAMBAHAN: Form Username (Untuk Login) --}}
                             <div class="mb-3">
-                                <label for="username" class="form-label text-primary fw-bold">Username (Untuk Login)</label>
+                                <label for="username" class="form-label text-primary fw-bold">Username(Gunakan Email Mitra)</label>
                                 <input type="text" class="form-control border-primary @error('username') is-invalid @enderror" id="username" name="username" required>
                                 @error('username')
                                     <div class="invalid-feedback">{{ $message }}</div>

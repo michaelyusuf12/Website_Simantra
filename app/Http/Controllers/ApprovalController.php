@@ -49,7 +49,7 @@ class ApprovalController extends Controller
 
         $penugasans = $query->latest()->get();
 
-        return view('kepala_bps.approval', compact('penugasans', 'bulanFilter', 'statusFilter', 'search'));
+        return view('ppk.approval', compact('penugasans', 'bulanFilter', 'statusFilter', 'search'));
     }
 
     // 2. Fungsi Approve
@@ -80,7 +80,7 @@ class ApprovalController extends Controller
         return back()->with('success', count($ids) . ' dokumen berhasil disetujui sekaligus!');
     }
 
-    // 5. 🚨 FUNGSI BARU: CETAK LAPORAN PDF
+    // 5. EXPORT EXCEL (REVISI BPS)
     public function cetakLaporan(Request $request)
     {
         $bulanFilter = $request->input('month', date('n')); 
@@ -119,13 +119,85 @@ class ApprovalController extends Controller
         }
 
         $penugasans = $query->latest()->get();
-        $totalHonor = $penugasans->sum('total_nilai_perjanjian');
 
-        // Memanggil View PDF
-        $pdf = Pdf::loadView('kepala_bps.cetak_laporan', compact('penugasans', 'namaBulan', 'statusFilter', 'totalHonor'))
-                  ->setPaper('a4', 'landscape'); // Format landscape agar tabel muat banyak
+        // LOGIKA PEMBENTUKAN FILE EXCEL (CSV)
+        $fileName = 'Laporan_Mitra_' . $namaBulan . '_' . ucfirst($statusFilter) . '.csv';
 
-        // Stream akan membuka PDF di tab baru, bukan langsung download
-        return $pdf->stream('Laporan_Mitra_'.$namaBulan.'_'.ucfirst($statusFilter).'.pdf');
+        $headers = [
+            "Content-type"        => "text/csv; charset=UTF-8",
+            "Content-Disposition" => "attachment; filename=$fileName",
+            "Pragma"              => "no-cache",
+            "Cache-Control"       => "must-revalidate, post-check=0, pre-check=0",
+            "Expires"             => "0"
+        ];
+
+        $callback = function() use($penugasans) {
+            $file = fopen('php://output', 'w');
+            
+            // Tambahkan BOM agar karakter terbaca sempurna di Microsoft Excel
+            fputs($file, "\xEF\xBB\xBF");
+            
+            // Judul Kolom (Header Excel)
+            fputcsv($file, ['No', 'Tanggal Pengajuan', 'No. Draf / SPK', 'Nama Mitra', 'Nama Kegiatan', 'Nominal Honor', 'Status Dokumen'], ';');
+
+            // Isi Data
+            $no = 1;
+            foreach ($penugasans as $p) {
+                $tgl = \Carbon\Carbon::parse($p->created_at)->locale('id')->translatedFormat('d F Y');
+                
+                // Ambil nama kegiatan
+                $kegiatan = '-';
+                if ($p->details && $p->details->count() > 0) {
+                    $kegiatan = $p->details->first()->kegiatan->Nama_kegiatan ?? $p->details->first()->kegiatan->nama_kegiatan ?? '-';
+                    if ($p->details->count() > 1) {
+                        $kegiatan .= ' (+'.($p->details->count() - 1).' lainnya)';
+                    }
+                }
+
+                // Masukkan baris data ke Excel
+                fputcsv($file, [
+                    $no++,
+                    $tgl,
+                    $p->no_surat ?? 'Belum ada nomor',
+                    $p->mitra->nama_petugas ?? '-',
+                    $kegiatan,
+                    $p->total_nilai_perjanjian,
+                    $p->status_kontrak
+                ], ';');
+            }
+            
+            fclose($file);
+        };
+
+        return response()->stream($callback, 200, $headers);
+    }
+
+    // 6. FUNGSI BARU: Menampilkan Detail untuk Modal Preview PPK
+    public function show($id)
+    {
+        try {
+            // [REVISI] Hanya mencari berdasarkan id_penugasan agar tidak error SQL
+            $penugasan = Penugasan::with(['mitra', 'details.kegiatan'])
+                                  ->where('id_penugasan', $id)
+                                  ->first();
+            
+            if (!$penugasan) {
+                return response()->json([
+                    'status' => 'error',
+                    'message' => "Data penugasan tidak ditemukan."
+                ], 404);
+            }
+
+            return response()->json([
+                'status' => 'success',
+                'data' => $penugasan
+            ]);
+            
+        } catch (\Exception $e) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Terjadi kesalahan: ' . $e->getMessage()
+            ], 500);
+        }
     }
 }

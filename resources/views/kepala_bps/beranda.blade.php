@@ -1,191 +1,138 @@
 @extends('layouts.master')
 
-@section('title', 'Beranda Kepala BPS')
-
 @section('content')
 <div class="container-fluid py-4">
     
-    {{-- ========================================== --}}
-    {{-- HEADER & LOGIKA TANGGAL --}}
-    {{-- ========================================== --}}
-    @php
-        $bulanIndo = [
-            1 => 'Januari', 2 => 'Februari', 3 => 'Maret', 4 => 'April',
-            5 => 'Mei', 6 => 'Juni', 7 => 'Juli', 8 => 'Agustus',
-            9 => 'September', 10 => 'Oktober', 11 => 'November', 12 => 'Desember'
-        ];
-        $bulanDipilih = request('month', date('n'));
-        $tahunSaatIni = date('Y');
-    @endphp
-
     <div class="d-flex justify-content-between align-items-center mb-4">
-        <h2 class="fw-bold text-dark mb-0">Beranda Kepala BPS</h2>
+        <div>
+            <h3 class="fw-bold text-dark mb-1">Dashboard Kepala BPS</h3>
+            <p class="textb-muted small m-0">Selamat Datang, <b>Kepala BPS</b>. Berikut adalah ringkasan performa & honorarium mitra.</p>
+        </div>
         
         <div class="dropdown shadow-sm">
-            <button class="btn btn-white dropdown-toggle px-4 border bg-white" type="button" data-bs-toggle="dropdown" style="border-radius: 10px; font-weight: 500;">
-                <i class="bi bi-calendar3 me-2 text-primary"></i> 
-                {{ $bulanIndo[(int)$bulanDipilih] }} {{ $tahunSaatIni }}
+            @php
+                $bulanIndo = [
+                    1 => 'Januari', 2 => 'Februari', 3 => 'Maret', 4 => 'April',
+                    5 => 'Mei', 6 => 'Juni', 7 => 'Juli', 8 => 'Agustus',
+                    9 => 'September', 10 => 'Oktober', 11 => 'November', 12 => 'Desember'
+                ];
+            @endphp
+            
+            <button class="btn btn-white dropdown-toggle border-primary bg-white fw-bold text-primary shadow-sm px-4" type="button" data-bs-toggle="dropdown" data-bs-auto-close="outside" aria-expanded="false" style="border-radius: 8px;">
+                <i class="bi bi-calendar3 me-2"></i> {{ $bulanIndo[(int)$bulanDipilih] }} {{ $tahunDipilih }}
             </button>
-            <ul class="dropdown-menu dropdown-menu-end shadow border-0" style="border-radius: 12px; max-height: 250px; overflow-y: auto;">
-                <li><h6 class="dropdown-header">Pilih Periode</h6></li>
-                @foreach($bulanIndo as $angka => $nama)
-                    <li>
-                        <a class="dropdown-item {{ $bulanDipilih == $angka ? 'active bg-primary text-white' : '' }}" href="?month={{ $angka }}">
-                            {{ $nama }}
-                        </a>
-                    </li>
-                @endforeach
-            </ul>
+            
+            <div class="dropdown-menu dropdown-menu-end p-3 shadow-lg border-0" style="width: 320px; border-radius: 12px;">
+                <div class="text-center mb-3 pb-2 border-bottom">
+                    <span class="fw-bold text-dark" style="font-size: 0.95rem;"><i class="bi bi-funnel-fill me-1 text-primary"></i> Pilih Tahun & Bulan</span>
+                </div>
+                
+                <div class="accordion accordion-flush" id="accordionTahun">
+                    @foreach($daftarTahun as $th)
+                    <div class="accordion-item border-0 mb-2">
+                        <h2 class="accordion-header" id="heading-{{ $th }}">
+                            <button class="accordion-button {{ $tahunDipilih == $th ? '' : 'collapsed' }} py-2 px-3 fw-bold rounded bg-light border shadow-sm" type="button" data-bs-toggle="collapse" data-bs-target="#collapse-{{ $th }}" style="font-size: 0.9rem;">
+                                Tahun {{ $th }}
+                            </button>
+                        </h2>
+                        <div id="collapse-{{ $th }}" class="accordion-collapse collapse {{ $tahunDipilih == $th ? 'show' : '' }}" data-bs-parent="#accordionTahun">
+                            <div class="accordion-body p-2 border border-top-0 rounded-bottom bg-white">
+                                <div class="row g-2">
+                                    @foreach($bulanIndo as $angka => $nama)
+                                    <div class="col-4">
+                                        <a href="?year={{ $th }}&month={{ $angka }}" class="btn btn-sm w-100 {{ ($tahunDipilih == $th && $bulanDipilih == $angka) ? 'btn-primary text-white fw-bold shadow' : 'btn-outline-primary' }}" style="font-size: 0.75rem; border-radius: 6px;">
+                                            {{ substr($nama, 0, 3) }}
+                                        </a>
+                                    </div>
+                                    @endforeach
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    @endforeach
+                </div>
+            </div>
         </div>
     </div>
 
-{{-- ========================================== --}}
-    {{-- EMPAT KOTAK STATISTIK UTAMA (DIKEMBALIKAN KE DESAIN ASLI) --}}
-    {{-- ========================================== --}}
-    <div class="row row-cols-1 row-cols-md-2 row-cols-lg-4 g-4 mb-4"> 
-        {{-- Card 1: Mitra Aktif (Biru) --}}
-        <div class="col">
-            <div class="card border-0 text-white shadow-sm h-100" style="background: linear-gradient(135deg, #00d2ff 0%, #007bff 100%); border-radius: 12px;">
-                <div class="card-body pb-2">
-                    <h6 class="fw-bold mb-3 text-uppercase" style="font-size: 0.75rem; opacity: 0.9; letter-spacing: 0.5px;">TOTAL MITRA AKTIF</h6>
-                    <div class="d-flex align-items-baseline">
-                        <h2 class="fw-bold mb-0 me-2" style="font-size: 2.5rem;">{{ $mitraAktif ?? 0 }}</h2>
-                        <span class="fw-medium" style="font-size: 1rem; opacity: 0.9;">/ {{ $totalMitra ?? 0 }} Mitra</span>
+    <div class="row g-3 mb-4">
+        <div class="col-md-4">
+            <div class="card border-0 shadow-sm bg-primary text-white p-3 h-100" style="border-radius: 12px;">
+                <div class="d-flex align-items-center justify-content-between h-100">
+                    <div>
+                        <span class="small text-white-50 d-block mb-1 fw-bold">TOTAL ANGGARAN BULAN INI</span>
+                        <h3 class="fw-bold mb-0">Rp {{ number_format($totalHonor, 0, ',', '.') }}</h3>
                     </div>
-                </div>
-                <div class="card-footer border-0 bg-transparent pt-0 pb-3">
-                    <div class="small fw-medium" style="font-size: 0.8rem; opacity: 0.9;">
-                        <i class="bi bi-people-fill me-1"></i> Sedang bekerja bulan ini
-                    </div>
+                    <div class="fs-1 text-white-50"><i class="bi bi-wallet2"></i></div>
                 </div>
             </div>
         </div>
 
-        {{-- Card 2: SPK Menunggu Persetujuan (Kuning/Oranye) --}}
-        <div class="col">
-            <div class="card border-0 text-white shadow-sm h-100" style="background: linear-gradient(135deg, #ffcf1b 0%, #ff8c00 100%); border-radius: 12px;">
-                <div class="card-body pb-2">
-                    <h6 class="fw-bold mb-3 text-uppercase" style="font-size: 0.75rem; opacity: 0.9; letter-spacing: 0.5px;">MENUNGGU APPROVAL</h6>
-                    <div class="d-flex align-items-baseline">
-                        <h2 class="fw-bold mb-0 me-2" style="font-size: 2.5rem;">{{ $menunggu ?? 0 }}</h2>
-                        <span class="fw-medium" style="font-size: 1rem; opacity: 0.9;">Kontrak</span>
+        <div class="col-md-4">
+            <div class="card border-0 shadow-sm bg-success text-white p-3 h-100" style="border-radius: 12px;">
+                <div class="d-flex align-items-center justify-content-between h-100">
+                    <div>
+                        <span class="small text-white-50 d-block mb-1 fw-bold">RASIO MITRA BERHONOR</span>
+                        <h3 class="fw-bold mb-0">{{ $persentaseMitraBerhonor }}%</h3>
+                        <span class="small text-white-50" style="font-size: 0.75rem;">Dari total {{ $totalMitra }} mitra terdaftar</span>
                     </div>
-                </div>
-                <div class="card-footer border-0 bg-transparent pt-0 pb-3">
-                    <div class="small fw-medium" style="font-size: 0.8rem; opacity: 0.9;">
-                        <i class="bi bi-pen-fill me-1"></i> Butuh tanda tangan basah
-                    </div>
+                    <div class="fs-1 text-white-50"><i class="bi bi-pie-chart-fill"></i></div>
                 </div>
             </div>
         </div>
 
-        {{-- Card 3: Kontrak Disetujui (Hijau) --}}
-        <div class="col">
-            <div class="card border-0 text-white shadow-sm h-100" style="background: linear-gradient(135deg, #20c997 0%, #11998e 100%); border-radius: 12px;">
-                <div class="card-body pb-2">
-                    <h6 class="fw-bold mb-3 text-uppercase" style="font-size: 0.75rem; opacity: 0.9; letter-spacing: 0.5px;">KONTRAK DISETUJUI</h6>
-                    <div class="d-flex align-items-baseline">
-                        <h2 class="fw-bold mb-0 me-2" style="font-size: 2.5rem;">{{ $disetujui ?? 0 }}</h2>
-                        <span class="fw-medium" style="font-size: 1rem; opacity: 0.9;">Kontrak</span>
+        <div class="col-md-4">
+            <div class="card border-0 shadow-sm bg-info text-white p-3 h-100" style="border-radius: 12px;">
+                <div class="d-flex align-items-center justify-content-between h-100">
+                    <div>
+                        <span class="small text-white-50 d-block mb-1 fw-bold">SURAT TUGAS DISETUJUI</span>
+                        <h3 class="fw-bold mb-0">{{ $disetujui }} <span class="fs-6 fw-normal text-white-50">Kontrak</span></h3>
+                        <span class="small text-white-50" style="font-size: 0.75rem;">{{ $menunggu }} Kontrak menunggu PPK</span>
                     </div>
-                </div>
-                <div class="card-footer border-0 bg-transparent pt-0 pb-3">
-                    <div class="small fw-medium" style="font-size: 0.8rem; opacity: 0.9;">
-                        <i class="bi bi-check-circle-fill me-1"></i> Siap dicetak oleh mitra
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        {{-- Card 4: Total Pengeluaran Honor (Ungu Gelap/Elegan) --}}
-        <div class="col">
-            <div class="card border-0 text-white shadow-sm h-100" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 12px;">
-                <div class="card-body pb-2">
-                    <h6 class="fw-bold mb-3 text-uppercase" style="font-size: 0.75rem; opacity: 0.9; letter-spacing: 0.5px;">TOTAL HONORARIUM</h6>
-                    <div class="d-flex align-items-baseline">
-                        <h3 class="fw-bold mb-0 me-2" style="font-size: 1.8rem;">Rp {{ number_format($totalHonor ?? 0, 0, ',', '.') }}</h3>
-                    </div>
-                </div>
-                <div class="card-footer border-0 bg-transparent pt-0 pb-3">
-                    <div class="small fw-medium" style="font-size: 0.8rem; opacity: 0.9;">
-                        <i class="bi bi-cash-stack me-1"></i> Total estimasi bulan ini
-                    </div>
+                    <div class="fs-1 text-white-50"><i class="bi bi-file-earmark-check"></i></div>
                 </div>
             </div>
         </div>
     </div>
 
     <div class="row g-4">
-        {{-- ========================================== --}}
-        {{-- TABEL SHORTCUT APPROVAL (KIRI) --}}
-        {{-- ========================================== --}}
-        <div class="col-lg-7">
-            <div class="card border-0 shadow-sm h-100" style="border-radius: 12px;">
-                <div class="card-header bg-white border-bottom py-3 d-flex justify-content-between align-items-center">
-                    <h6 class="fw-bold text-dark mb-0"><i class="bi bi-clock-history me-2 text-warning"></i>Perlu Persetujuan</h6>
-                    <a href="{{ route('kepala.approval') }}" class="btn btn-sm btn-link text-decoration-none">Lihat Semua</a>
+        <div class="col-md-6">
+            <div class="card border-0 shadow-sm" style="border-radius: 12px;">
+                <div class="card-header bg-white border-0 pt-3 fw-bold text-dark">
+                    <i class="bi bi-pie-chart me-2 text-primary"></i>Proporsi Alokasi Honor Per Fungsi
                 </div>
-                <div class="card-body p-0">
-                    <div class="table-responsive">
-                        <table class="table table-hover align-middle mb-0">
-                            <thead class="table-light small text-uppercase">
-                                <tr>
-                                    <th class="ps-4">Mitra</th>
-                                    <th class="text-end">Honor</th>
-                                    <th class="text-center">Aksi</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                @forelse($shortcutApproval ?? [] as $spk)
-                                    <tr>
-                                        <td class="ps-4">
-                                            <div class="fw-bold text-dark">{{ $spk->mitra->nama_petugas ?? 'User' }}</div>
-                                            <div class="text-muted small">{{ $spk->no_surat }}</div>
-                                        </td>
-                                        <td class="text-end fw-bold text-success">Rp {{ number_format($spk->total_nilai_perjanjian, 0, ',', '.') }}</td>
-                                        <td class="text-center">
-                                            <a href="{{ route('kepala.approval') }}" class="btn btn-sm btn-primary px-3 shadow-sm" style="border-radius: 6px;">Review</a>
-                                        </td>
-                                    </tr>
-                                @empty
-                                    <tr><td colspan="3" class="text-center py-5 text-muted">Tidak ada data.</td></tr>
-                                @endforelse
-                            </tbody>
-                        </table>
-                    </div>
+                <div class="card-body d-flex justify-content-center align-items-center" style="height: 320px;">
+                    <canvas id="chartFungsiHead"></canvas>
                 </div>
             </div>
         </div>
 
-        {{-- ========================================== --}}
-        {{-- ALTERNATIF 1: DONUT CHART (KANAN) --}}
-        {{-- ========================================== --}}
-        <div class="col-lg-5">
-            <div class="card border-0 shadow-sm h-100" style="border-radius: 12px;">
-                <div class="card-header bg-white border-bottom py-3">
-                    <h6 class="fw-bold text-dark mb-0"><i class="bi bi-pie-chart-fill me-2 text-primary"></i>Proporsi Honor per Kegiatan</h6>
+        <div class="col-md-6">
+            <div class="card border-0 shadow-sm" style="border-radius: 12px;">
+                <div class="card-header bg-white border-0 pt-3 fw-bold text-dark">
+                    <i class="bi bi-pie-chart-fill me-2 text-success"></i>Proporsi Alokasi Honor Per Kegiatan
                 </div>
-                <div class="card-body d-flex flex-column align-items-center justify-content-center">
-                    @if(!empty($honorPerKegiatan))
-                        <div style="width: 100%; max-width: 280px;">
-                            <canvas id="chartHonorKegiatan"></canvas>
-                        </div>
-                        <div class="mt-4 w-100" style="max-height: 200px; overflow-y: auto;">
-                            <ul class="list-group list-group-flush small">
-                                @foreach($honorPerKegiatan as $nama => $nilai)
-                                    <li class="list-group-item d-flex justify-content-between align-items-center border-0 px-0">
-                                        <span><i class="bi bi-circle-fill me-2" id="bullet-{{ $loop->index }}"></i> {{ $nama }}</span>
-                                        <span class="fw-bold">Rp {{ number_format($nilai, 0, ',', '.') }}</span>
-                                    </li>
-                                @endforeach
-                            </ul>
-                        </div>
-                    @else
-                        <div class="text-center text-muted py-5">
-                            <i class="bi bi-pie-chart fs-1 d-block mb-2 opacity-50"></i>
-                            Belum ada data kegiatan.
-                        </div>
-                    @endif
+                <div class="card-body d-flex justify-content-center align-items-center" style="height: 320px;">
+                    <canvas id="chartKegiatanHead"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<div class="modal fade" id="modalDetailChartHead" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow" style="border-radius: 12px;">
+            <div class="modal-header bg-dark text-white py-2" style="border-radius: 12px 12px 0 0;">
+                <h6 class="modal-title fw-bold" id="titleModalChartHead"><i class="bi bi-people me-2"></i>Daftar Nama Mitra</h6>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body p-3">
+                <p class="text-muted small mb-2">Daftar nama mitra yang berkontribusi pada sektor ini di periode berjalan:</p>
+                <div style="max-height: 250px; overflow-y: auto;">
+                    <ul class="list-group list-group-flush small" id="listMitraChartHead">
+                        </ul>
                 </div>
             </div>
         </div>
@@ -194,71 +141,99 @@
 @endsection
 
 @push('scripts')
-{{-- Library Grafik Chart.js --}}
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-
 <script>
-document.addEventListener("DOMContentLoaded", function() {
-    @if(!empty($honorPerKegiatan))
-        const ctx = document.getElementById('chartHonorKegiatan').getContext('2d');
-        
-        // Data dari PHP (Controller)
-        const dataHonor = @json(array_values($honorPerKegiatan));
-        const labelKegiatan = @json(array_keys($honorPerKegiatan));
-        
-        // Palet Warna Professional yang lebih banyak untuk menampung banyak kegiatan
-        const colors = ['#4e73df', '#1cc88a', '#36b9cc', '#f6c23e', '#e74a3b', '#858796', '#5a5c69', '#fd7e14', '#20c997', '#0dcaf0', '#6610f2', '#d63384'];
+document.addEventListener("DOMContentLoaded", function () {
+    
+    // 1. DATA RAW DARI LARAVEL BACKEND
+    const dataFungsiRaw = @json($honorPerFungsi);
+    const dataKegiatanRaw = @json($honorPerKegiatan);
 
-        // Warnai Bullet Legend secara manual di daftar bawah agar sinkron dengan warna grafik
-        labelKegiatan.forEach((label, i) => {
-            const bullet = document.getElementById(`bullet-${i}`);
-            if(bullet) bullet.style.color = colors[i % colors.length];
-        });
+    // Parse Data Fungsi
+    const labelsFungsi = Object.keys(dataFungsiRaw);
+    const valuesFungsi = Object.values(dataFungsiRaw).map(item => item.total);
+    const mitrasFungsi = Object.values(dataFungsiRaw).map(item => item.mitra);
 
-        new Chart(ctx, {
-            type: 'doughnut',
-            data: {
-                labels: labelKegiatan,
-                datasets: [{
-                    data: dataHonor,
-                    backgroundColor: colors,
-                    hoverBackgroundColor: colors,
-                    hoverBorderColor: "rgba(234, 236, 244, 1)",
-                    borderWidth: 2
-                }],
-            },
-            options: {
-                maintainAspectRatio: false,
-                cutout: '70%', // Mengatur seberapa besar lubang donatnya
-                plugins: {
-                    // INI KUNCI PERBAIKANNYA: Menyembunyikan teks bawaan yang menumpuk di atas grafik
-                    legend: {
-                        display: false 
-                    },
-                    // Membuat tooltip (kotak info saat grafik disentuh mouse) menjadi lebih rapi
-                    tooltip: {
-                        callbacks: {
-                            label: function(context) {
-                                let label = context.label || '';
-                                if (label) {
-                                    label += ': ';
-                                }
-                                if (context.parsed !== null) {
-                                    // Format angka ke mata uang Rupiah
-                                    label += new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(context.parsed);
-                                }
-                                return label;
-                            }
-                        }
-                    }
-                },
-                animation: {
-                    animateScale: true,
-                    animateRotate: true
+    // Parse Data Kegiatan
+    const labelsKegiatan = Object.keys(dataKegiatanRaw);
+    const valuesKegiatan = Object.values(dataKegiatanRaw).map(item => item.total);
+    const mitrasKegiatan = Object.values(dataKegiatanRaw).map(item => item.mitra);
+
+    const bootstrapModal = new bootstrap.Modal(document.getElementById('modalDetailChartHead'));
+    const listContainer = document.getElementById('listMitraChartHead');
+    const titleModal = document.getElementById('titleModalChartHead');
+
+    // Fungsi Tampilkan Pop-up Nama Mitra
+    function showMitraModal(title, mitraList) {
+        titleModal.innerHTML = `<i class="bi bi-people me-2"></i> Mitra di Sektor: ${title}`;
+        listContainer.innerHTML = '';
+        
+        if (mitraList && mitraList.length > 0) {
+            mitraList.forEach(nama => {
+                const li = document.createElement('li');
+                li.className = 'list-group-item d-flex align-items-center py-2';
+                li.innerHTML = `<i class="bi bi-person-check-fill text-success me-2"></i> ${nama}`;
+                listContainer.appendChild(li);
+            });
+        } else {
+            listContainer.innerHTML = `<li class="list-group-item text-center text-muted">Tidak ada data mitra</li>`;
+        }
+        bootstrapModal.show();
+    }
+
+    const colorsPalette = ['#4e73df', '#1cc88a', '#36b9cc', '#f6c23e', '#e74a3b', '#858796', '#5a5c69', '#f8f9fc'];
+
+    // 2. RENDER GRAPH PER-FUNGSI
+    const ctxFungsi = document.getElementById('chartFungsiHead').getContext('2d');
+    const chartFungsi = new Chart(ctxFungsi, {
+        type: 'pie',
+        data: {
+            labels: labelsFungsi,
+            datasets: [{
+                data: valuesFungsi,
+                backgroundColor: colorsPalette
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: { legend: { position: 'bottom', labels: { boxWidth: 12, font: { size: 11 } } } },
+            onClick: (e, activeElements) => {
+                if (activeElements && activeElements.length > 0) {
+                    const idx = activeElements[0].index;
+                    const sectorLabel = labelsFungsi[idx];
+                    const listMitra = mitrasFungsi[idx];
+                    showMitraModal(sectorLabel, listMitra);
                 }
-            },
-        });
-    @endif
+            }
+        }
+    });
+
+    // 3. RENDER GRAPH PER-KEGIATAN
+    const ctxKegiatan = document.getElementById('chartKegiatanHead').getContext('2d');
+    const chartKegiatan = new Chart(ctxKegiatan, {
+        type: 'pie',
+        data: {
+            labels: labelsKegiatan,
+            datasets: [{
+                data: valuesKegiatan,
+                backgroundColor: colorsPalette
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: { legend: { display: false } }, 
+            onClick: (e, activeElements) => {
+                if (activeElements && activeElements.length > 0) {
+                    const idx = activeElements[0].index;
+                    const sectorLabel = labelsKegiatan[idx];
+                    const listMitra = mitrasKegiatan[idx];
+                    showMitraModal(sectorLabel, listMitra);
+                }
+            }
+        }
+    });
 });
 </script>
 @endpush
