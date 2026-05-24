@@ -29,10 +29,11 @@
                 $userRole = auth()->user()->role;
                 
                 // MENENTUKAN LINK BERANDA
-                $berandaLink = route('beranda'); // Default untuk Admin, Kepala BPS, dan PPK
+                // Semua role (Admin, Pegawai, PPK) akan menggunakan route 'beranda'
+                $berandaLink = route('beranda'); 
+                
+                // Hanya Mitra yang memiliki panel dan controllernya sendiri
                 if($userRole == 'mitra') $berandaLink = route('mitra.beranda'); 
-                if($userRole == 'pegawai') $berandaLink = route('pegawai.beranda');
-                if($userRole == 'ppk') $berandaLink = route('ppk.beranda');
             @endphp
 
             {{-- MENU BERANDA (Semua Aktor) --}}

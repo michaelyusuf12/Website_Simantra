@@ -46,7 +46,6 @@ Route::middleware('auth')->group(function () {
 
     // --- RUTE KHUSUS PEGAWAI ---
     Route::middleware('role:pegawai')->group(function () {
-        Route::get('/pegawai-beranda', function () { return view('pegawai.beranda'); })->name('pegawai.beranda');
         Route::get('/kelolakegiatan/cek-akumulasi', [KelolaKegiatanController::class, 'cekAkumulasi'])->name('kelolakegiatan.cekAkumulasi');
         
         // [PERBAIKAN] Pindahkan route EXPORT ke dalam grup pegawai agar rapi

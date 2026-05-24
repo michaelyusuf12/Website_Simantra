@@ -23,8 +23,7 @@
                             <div class="col-md-6">
                                 <table class="table table-borderless table-sm mb-0">
                                     <tr><td style="width: 130px;" class="fw-bold text-secondary">Tanggal Input</td><td style="width: 10px;">:</td><td id="detailTanggalSurat">-</td></tr>
-                                    <tr><td class="fw-bold text-secondary">Status Kontrak</td><td>:</td><td><span class="badge bg-warning text-dark" id="detailStatus">-</span></td></tr>
-                                    <tr><td class="fw-bold text-secondary">Total Honor</td><td>:</td><td class="fw-bold text-success" id="detailTotalHonor">-</td></tr>
+                                    <tr><td class="fw-bold text-secondary">Status Kontrak</td><td>:</td><td><span class="badge" id="detailStatus">-</span></td></tr>                                    <tr><td class="fw-bold text-secondary">Total Honor</td><td>:</td><td class="fw-bold text-success" id="detailTotalHonor">-</td></tr>
                                 </table>
                             </div>
                         </div>

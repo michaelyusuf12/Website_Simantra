@@ -185,19 +185,35 @@ document.addEventListener("DOMContentLoaded", function () {
 
     // 2. RENDER GRAPH PER-FUNGSI
     const ctxFungsi = document.getElementById('chartFungsiHead').getContext('2d');
-    const chartFungsi = new Chart(ctxFungsi, {
-        type: 'pie',
+    new Chart(ctxFungsi, {
+        type: 'doughnut', // [PERBAIKAN] Ubah dari pie ke doughnut
         data: {
             labels: labelsFungsi,
             datasets: [{
                 data: valuesFungsi,
-                backgroundColor: colorsPalette
+                backgroundColor: colorsPalette,
+                borderWidth: 2, // [PERBAIKAN] Samakan dengan PPK
+                hoverOffset: 10 // [PERBAIKAN] Efek hover seperti PPK
             }]
         },
         options: {
             responsive: true,
             maintainAspectRatio: false,
-            plugins: { legend: { position: 'bottom', labels: { boxWidth: 12, font: { size: 11 } } } },
+            cutout: '65%', // [PERBAIKAN] Buat lubang tengah donut
+            plugins: { 
+                legend: { 
+                    display: true, 
+                    position: 'bottom', 
+                    labels: { padding: 20, boxWidth: 12, font: { size: 11 } } 
+                },
+                tooltip: { // [PERBAIKAN] Format Rupiah di Tooltip
+                    callbacks: {
+                        label: function(context) {
+                            return ' ' + new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(context.raw);
+                        }
+                    }
+                }
+            },
             onClick: (e, activeElements) => {
                 if (activeElements && activeElements.length > 0) {
                     const idx = activeElements[0].index;
@@ -211,19 +227,35 @@ document.addEventListener("DOMContentLoaded", function () {
 
     // 3. RENDER GRAPH PER-KEGIATAN
     const ctxKegiatan = document.getElementById('chartKegiatanHead').getContext('2d');
-    const chartKegiatan = new Chart(ctxKegiatan, {
-        type: 'pie',
+    new Chart(ctxKegiatan, {
+        type: 'doughnut', // [PERBAIKAN] Ubah dari pie ke doughnut
         data: {
             labels: labelsKegiatan,
             datasets: [{
                 data: valuesKegiatan,
-                backgroundColor: colorsPalette
+                backgroundColor: colorsPalette.slice().reverse(), // Bedakan urutan warna sedikit
+                borderWidth: 2,
+                hoverOffset: 10
             }]
         },
         options: {
             responsive: true,
             maintainAspectRatio: false,
-            plugins: { legend: { display: false } }, 
+            cutout: '65%', // [PERBAIKAN] Lubang donut
+            plugins: { 
+                legend: { 
+                    display: true, // [PERBAIKAN] Memunculkan keterangan warna yang tadinya disembunyikan (false)
+                    position: 'bottom',
+                    labels: { padding: 20, boxWidth: 12, font: { size: 11 } } 
+                }, 
+                tooltip: { // [PERBAIKAN] Format Rupiah di Tooltip
+                    callbacks: {
+                        label: function(context) {
+                            return ' ' + new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(context.raw);
+                        }
+                    }
+                }
+            }, 
             onClick: (e, activeElements) => {
                 if (activeElements && activeElements.length > 0) {
                     const idx = activeElements[0].index;

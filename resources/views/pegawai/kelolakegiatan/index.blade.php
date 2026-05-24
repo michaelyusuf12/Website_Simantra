@@ -10,7 +10,6 @@
             <i class="bi bi-plus-circle me-1"></i> Tambah Penugasan
         </button>
 
-        {{-- [REVISI] TOMBOL EXPORT EXCEL --}}
         <button type="button" class="btn btn-outline-success px-4 shadow-sm" id="btnExportExcel" style="border-radius: 6px; font-weight: 500;">
             <i class="bi bi-file-earmark-excel me-1"></i> Export Excel
         </button>
@@ -20,7 +19,6 @@
         <div class="card-body bg-light" style="border-radius: 12px;">
             <form action="{{ route('kelolakegiatan.index') }}" method="GET" class="row g-2 align-items-center">
                 
-                {{-- [REVISI] FILTER BULAN --}}
                 <div class="col-md-2">
                     <select name="bulan" class="form-select border-0 shadow-sm" style="border-radius: 8px;">
                         <option value="">-- Semua Bulan --</option>
@@ -30,7 +28,6 @@
                     </select>
                 </div>
 
-                {{-- [REVISI] FILTER FUNGSI --}}
                 <div class="col-md-3">
                     <select name="fungsi" class="form-select border-0 shadow-sm" style="border-radius: 8px;">
                         <option value="">-- Semua Fungsi --</option>
@@ -40,7 +37,6 @@
                     </select>
                 </div>
 
-                {{-- [REVISI] FILTER KEGIATAN --}}
                 <div class="col-md-4">
                     <select name="kegiatan" class="form-select border-0 shadow-sm" style="border-radius: 8px;">
                         <option value="">-- Semua Kegiatan --</option>
@@ -52,7 +48,6 @@
                     </select>
                 </div>
 
-                {{-- [REVISI] PENCARIAN TEKS --}}
                 <div class="col-md-2">
                     <input type="text" class="form-control border-0 shadow-sm" name="search" placeholder="Cari Surat/Mitra..." value="{{ request('search') }}" style="border-radius: 8px;">
                 </div>
@@ -66,8 +61,6 @@
         </div>
     </div>
 
-    {{-- TABEL UTAMA --}}
-    {{-- [REVISI] Form khusus untuk Export Excel --}}
     <form id="formExport" action="{{ route('kelolakegiatan.export') }}" method="POST">
         @csrf
         <div class="table-responsive shadow-sm" style="border-radius: 10px;">
@@ -75,7 +68,6 @@
                 <thead class="table-primary text-center">
                     <tr>
                         <th class="py-3" style="width: 40px;">
-                            {{-- Checkbox Master --}}
                             <input class="form-check-input" type="checkbox" id="checkAll">
                         </th>
                         <th class="py-3" style="width: 50px;">No</th>
@@ -91,10 +83,9 @@
                     @forelse($penugasans as $index => $p)
                     <tr>
                         <td class="text-center">
-                            {{-- Checkbox Child --}}
                             <input class="form-check-input check-item" type="checkbox" name="ids[]" value="{{ $p->id_penugasan ?? $p->id }}">
                         </td>
-                        <td class="text-center text-muted fw-bold">{{ $index + 1 }}</td>
+                        <td class="text-center text-muted fw-bold">{{ $penugasans->firstItem() + $index }}</td>
                         <td><div class="fw-bold text-dark">{{ $p->mitra->nama_petugas ?? '-' }}</div></td>
                         <td class="text-center">
                             <span class="text-primary fw-bold" style="font-size: 0.9rem;">
@@ -134,9 +125,15 @@
                 </tbody>
             </table>
         </div>
+        
+        {{-- [PERBAIKAN] MENAMPILKAN TOMBOL PAGINATION / HALAMAN --}}
+        <div class="d-flex justify-content-end mt-3"> 
+            @if ($penugasans->hasPages())
+                {{ $penugasans->links() }}
+            @endif
+        </div>
     </form>
 
-    {{-- Form tersembunyi untuk Hapus (agar tombol SweetAlert berfungsi benar) --}}
     <form id="formDeleteMaster" method="POST" style="display: none;">
         @csrf
         @method('DELETE')
@@ -150,31 +147,24 @@
 
 @push('scripts')
 <script>
-
 document.addEventListener("DOMContentLoaded", function () {
     
-    // ==========================================
-    // AUTO-CLOSE ALERT BOOTSTRAP
-    // ==========================================
-    // Cari semua elemen dengan class 'alert'
     let alerts = document.querySelectorAll('.alert');
-    
     if (alerts.length > 0) {
-        // Atur waktu tunggu (contoh: 4000 milidetik = 4 detik)
         setTimeout(function() {
             alerts.forEach(function(alert) {
-                // Gunakan fungsi bawaan Bootstrap untuk menutup alert dengan animasi fade
                 let bsAlert = new bootstrap.Alert(alert);
                 bsAlert.close();
             });
         }, 4000); 
     }
     
-window.AppRoutes = {
-    cekAkumulasi: "{{ route('kelolakegiatan.cekAkumulasi') }}",
-    store: "{{ route('kelolakegiatan.store') }}",
-    csrfToken: "{{ csrf_token() }}"
-};
+    window.AppRoutes = {
+        cekAkumulasi: "{{ route('kelolakegiatan.cekAkumulasi') }}",
+        store: "{{ route('kelolakegiatan.store') }}",
+        csrfToken: "{{ csrf_token() }}"
+    };
+});
 </script>
 <script src="{{ asset('js/kelolakegiatan.js') }}"></script>
 @endpush

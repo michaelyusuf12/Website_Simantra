@@ -125,7 +125,7 @@
                             <td class="text-center">
                                 <input class="form-check-input border-secondary check-item" type="checkbox" value="{{ $p->id_penugasan ?? $p->id }}">
                             </td>
-                            <td class="text-center text-muted fw-bold">{{ $index + 1 }}</td>
+                            <td class="text-center text-muted fw-bold">{{ $penugasans->firstItem() + $index }}</td>
                             <td>{{ \Carbon\Carbon::parse($p->created_at)->locale('id')->translatedFormat('d F Y') }}</td>
                             <td><span class="badge bg-light text-dark border">{{ $p->no_surat ?? 'Belum ada nomor' }}</span></td>
                             <td class="fw-bold">{{ $p->mitra->nama_petugas ?? '-' }}</td>
@@ -186,8 +186,16 @@
                 </table>
             </div>
         </div>
-    </div>
 
+        {{-- ========================================= --}}
+        {{-- TOMBOL NAVIGASI HALAMAN (PAGINATION) --}}
+        {{-- ========================================= --}}
+        <div class="d-flex justify-content-end mt-3 px-4 pb-3">
+            @if ($penugasans->hasPages())
+                {{ $penugasans->links() }}
+            @endif
+        </div>
+    </div>
 </div>
 
 {{-- Form Tersembunyi untuk Bulk Approve --}}

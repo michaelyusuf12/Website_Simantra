@@ -55,8 +55,9 @@
                         </div>
                     </div>
 
-                    <div class="alert alert-info border-0 shadow-sm py-2 mb-3" role="alert" style="border-radius: 8px; background-color: #d1ecf1; color: #0c5460;">
-                        <i class="bi bi-info-circle-fill me-2"></i> <span id="infoBatas">Info Batas Maksimum : Silahkan pilih mitra dan Bulan.</span>
+                    <div class="border-0 shadow-sm py-2 px-3 mb-3 d-flex align-items-center" style="border-radius: 8px; background-color: #d1ecf1; color: #0c5460;">
+                        <i class="bi bi-info-circle-fill me-2 fs-5"></i> 
+                        <span id="infoBatas" class="fw-medium">Info Batas Maksimum : Silahkan pilih mitra dan Bulan.</span>
                     </div>
 
                     <div class="card border-0 shadow-sm" style="border-radius: 10px;">

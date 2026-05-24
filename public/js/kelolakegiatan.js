@@ -439,7 +439,24 @@ document.addEventListener("DOMContentLoaded", function () {
                         const tgl = new Date(d.tanggal_surat);
                         document.getElementById('detailTanggalSurat').innerText = tgl.toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' });
                         
-                        document.getElementById('detailStatus').innerText = d.status_kontrak || '-';
+                        // --- MULAI KODE YANG BARU DITEMPEL ---
+                        const statusSpan = document.getElementById('detailStatus');
+                        const statusText = d.status_kontrak || '-';
+                        statusSpan.innerText = statusText;
+
+                        // Reset semua kelas warna
+                        statusSpan.className = 'badge'; 
+
+                        // Cek status dan berikan warna yang sesuai
+                        if (statusText.toLowerCase() === 'disetujui') {
+                            statusSpan.classList.add('bg-success', 'text-white'); // Hijau
+                        } else if (statusText.toLowerCase() === 'ditolak') {
+                            statusSpan.classList.add('bg-danger', 'text-white'); // Merah
+                        } else {
+                            statusSpan.classList.add('bg-warning', 'text-dark'); // Kuning (Menunggu)
+                        }
+                        // --- AKHIR KODE YANG BARU DITEMPEL ---
+
                         document.getElementById('detailTotalHonor').innerText = "Rp " + parseInt(d.total_nilai_perjanjian).toLocaleString('id-ID');
 
                         const tbody = document.getElementById('tbodyDetailRincian');

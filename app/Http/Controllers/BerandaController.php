@@ -29,13 +29,23 @@ class BerandaController extends Controller
         // 1. LOGIKA FILTER PERIODE (TAHUN & BULAN)
         // ==========================================
         $tahunSekarang = Carbon::now()->year;
-        $tahunDipilih = $request->input('year', $tahunSekarang);
+        
+        // [PERBAIKAN] Tangani jika input tahun kosong
+        $tahunDipilih = $request->input('year');
+        if (empty($tahunDipilih)) {
+            $tahunDipilih = $tahunSekarang;
+        }
         $data['tahunDipilih'] = (int)$tahunDipilih;
         $tahunMulaiAplikasi = 2024; 
         $data['daftarTahun'] = range($tahunMulaiAplikasi, $tahunSekarang + 1); 
-        $bulanAngka = $request->input('month', Carbon::now()->month); 
+        
+        // [PERBAIKAN] Tangani jika input bulan kosong secara paksa
+        $bulanAngka = $request->input('month');
+        if (empty($bulanAngka)) {
+            $bulanAngka = Carbon::now()->month;
+        }
         $data['bulanDipilih'] = (int)$bulanAngka; 
-        $bulanNama = $this->bulanMap[$bulanAngka] ?? Carbon::now()->monthName; 
+        $bulanNama = $this->bulanMap[(int)$bulanAngka]; // Pastikan selalu ambil dari Array Indo
 
         // Query Dasar (Digunakan oleh banyak role)
         $penugasanBulanIni = Penugasan::with(['mitra', 'details.kegiatan'])
@@ -57,14 +67,12 @@ class BerandaController extends Controller
             });
         }
         
-
         // Siapkan data dropdown untuk dikirim ke tampilan (View)
         $data['listFungsi'] = Kegiatan::select('fungsi')->distinct()->whereNotNull('fungsi')->pluck('fungsi');
         $data['listKegiatan'] = Kegiatan::select('id_kegiatan', 'nama_kegiatan', 'Nama_kegiatan')->get();
         // ==========================================
 
-        $data['daftarPenugasan'] = (clone $penugasanBulanIni)->latest()->get();
-
+        $data['daftarPenugasan'] = (clone $penugasanBulanIni)->latest()->paginate(10)->withQueryString();
         // ==========================================
         // 2. LOGIKA KHUSUS ADMIN
         // ==========================================
@@ -86,16 +94,15 @@ class BerandaController extends Controller
             $data['topMitraLabels'] = $topMitraData->map(fn($item) => $item->mitra->nama_petugas ?? 'N/A')->toArray();
             $data['topMitraHonor'] = $topMitraData->map(fn($item) => $item->total_honor)->toArray();
 
-            // [REVISI] PIE CHART (Mitra Berhonor vs Belum Berhonor)
+            // PIE CHART (Mitra Berhonor vs Belum Berhonor)
             $semuaMitraIds = Mitra::pluck('sobat_id')->toArray();
             $mitraBerhonorIds = (clone $penugasanBulanIni)->where('total_nilai_perjanjian', '>', 0)->pluck('mitra_id')->unique()->toArray();
             $mitraBelumBerhonorIds = array_diff($semuaMitraIds, $mitraBerhonorIds);
 
-            // 👇 TAMBAHKAN 2 BARIS INI UNTUK DIKIRIM KE VIEW ADMIN 👇
             $data['mitraBerhonor'] = count($mitraBerhonorIds);
             $data['mitraTanpaHonor'] = count($mitraBelumBerhonorIds);
 
-            // Kita kirimkan array berisi "Nama-nama Mitra" agar nanti JS bisa menampilkannya di Pop-up Modal
+            // kirimkan array berisi "Nama-nama Mitra" agar nanti JS bisa menampilkannya di Pop-up Modal
             $data['chartRasio'] = [
                 'berhonor' => Mitra::whereIn('sobat_id', $mitraBerhonorIds)->pluck('nama_petugas')->toArray(),
                 'belum_berhonor' => Mitra::whereIn('sobat_id', $mitraBelumBerhonorIds)->pluck('nama_petugas')->toArray()
@@ -254,7 +261,6 @@ class BerandaController extends Controller
                     'used' => $item->used_honor,
                     'limit' => $limit,
                     'percentage' => round($percentage, 0),
-                    // [REVISI] Mengubah Label Warning Mitra
                     'status' => $percentage >= 90 ? 'Hampir Maksimal' : 'Aman', 
                     'color' => $percentage >= 90 ? 'warning' : 'success'
                 ];
@@ -262,12 +268,10 @@ class BerandaController extends Controller
         }
  
         // --- PENGARAHAN VIEW ---
-        // Jika kepala_bps login, arahkan ke view ppk.beranda agar tampilannya sama
-       if ($role == 'kepala') {
+        if ($role == 'kepala') {
             $role = 'ppk';
         }
 
-        // Arahkan ke folder masing-masing sesuai role yang sedang login
         return view($role . '.beranda', $data);
     }
 }

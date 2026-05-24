@@ -47,8 +47,9 @@ class ApprovalController extends Controller
             });
         }
 
-        $penugasans = $query->latest()->get();
-
+        // --- (PAGINATION) ---
+        $penugasans = $query->latest()->paginate(10)->appends($request->query());
+        
         return view('ppk.approval', compact('penugasans', 'bulanFilter', 'statusFilter', 'search'));
     }
 

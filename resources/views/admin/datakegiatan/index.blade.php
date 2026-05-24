@@ -8,9 +8,15 @@
         <h3 class="text-dark fw-bold">Data Kegiatan</h3>
     </div>
 
+    {{-- [PERBAIKAN] Alert sekarang menampilkan detail error-nya apa --}}
     @if ($errors->any()) 
     <div class="alert alert-danger alert-dismissible fade show" role="alert">
-        <strong>Gagal menyimpan!</strong> Periksa kembali input Anda di form.
+        <strong>Gagal menyimpan!</strong> Ada isian yang belum sesuai:
+        <ul class="mb-0 mt-2">
+            @foreach ($errors->all() as $error)
+                <li>{{ $error }}</li>
+            @endforeach
+        </ul>
         <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
     </div>
     @endif
@@ -42,7 +48,6 @@
                     <th class="py-3">Nama Kegiatan</th>
                     <th class="py-3">Penanggung Jawab</th>
                     <th class="py-3">Fungsi</th>
-                    {{-- Kolom Jenis dan Periode Dihapus --}}
                     <th class="py-3">Honor per Dokumen</th>
                     <th class="py-3" style="width: 120px;">Aksi</th>
                 </tr>
@@ -57,7 +62,6 @@
                         <span class="badge bg-secondary">{{ $kegiatan->fungsi }}</span>
                     </td>
                     <td class="text-end px-4">
-                        {{-- Menampilkan Honor Secara Dinamis --}}
                         @if($kegiatan->honor_pml_per_dokumen > 0)
                             <small class="text-muted d-block" style="font-size: 0.85rem;">PML: <b class="text-dark">Rp {{ number_format($kegiatan->honor_pml_per_dokumen, 0, ',', '.') }}</b></small>
                         @endif
@@ -76,7 +80,6 @@
                     </td>
                     <td class="text-center">
                         <div class="d-flex justify-content-center gap-2">
-                            {{-- TOMBOL EDIT --}}
                             <button class="btn btn-outline-warning btn-sm shadow-sm btnEdit"
                                 title="Edit Data"
                                 data-bs-toggle="modal" 
@@ -97,7 +100,6 @@
                                 <i class="bi bi-pencil-fill"></i>
                             </button>
 
-                            {{-- TOMBOL HAPUS --}}
                             <form action="{{ route('datakegiatan.destroy', $kegiatan->id_kegiatan) }}" method="POST" class="d-inline form-hapus">
                                 @csrf 
                                 @method('DELETE')
@@ -132,6 +134,15 @@
 <script>
 document.addEventListener("DOMContentLoaded", function () {
     
+    // [PERBAIKAN] Script untuk otomatis menghilangkan Alert dalam 4 detik
+    setTimeout(function() {
+        let alertNode = document.querySelector('.alert');
+        if (alertNode) {
+            let bsAlert = new bootstrap.Alert(alertNode);
+            bsAlert.close();
+        }
+    }, 4000);
+
     const modalTitle = document.getElementById("modalTitle");
     const form = document.getElementById("formKegiatan");
     const formMethodInput = document.getElementById("formMethod");
@@ -141,14 +152,12 @@ document.addEventListener("DOMContentLoaded", function () {
     // 1. FUNGSI FORMAT RUPIAH OTOMATIS
     // ==========================================
     function formatRupiah(angka) {
-        // Hapus semua karakter selain angka
         let number_string = angka.toString().replace(/[^,\d]/g, ''),
             split = number_string.split(','),
             sisa = split[0].length % 3,
             rupiah = split[0].substr(0, sisa),
             ribuan = split[0].substr(sisa).match(/\d{3}/gi);
 
-        // Tambahkan titik jika yang diinput sudah menjadi angka ribuan
         if (ribuan) {
             let separator = sisa ? '.' : '';
             rupiah += separator + ribuan.join('.');
@@ -156,10 +165,8 @@ document.addEventListener("DOMContentLoaded", function () {
         return rupiah;
     }
 
-    // Pasang event listener ke semua input yang punya class 'input-rupiah'
     document.querySelectorAll('.input-rupiah').forEach(function(input) {
         input.addEventListener('input', function(e) {
-            // Format langsung saat diketik
             this.value = formatRupiah(this.value);
         });
     });
@@ -169,7 +176,6 @@ document.addEventListener("DOMContentLoaded", function () {
     // ==========================================
     form.addEventListener('submit', function() {
         document.querySelectorAll('.input-rupiah').forEach(function(input) {
-            // Hapus titik sebelum form dikirim ke controller
             input.value = input.value.replace(/\./g, '');
         });
     });
@@ -191,7 +197,7 @@ document.addEventListener("DOMContentLoaded", function () {
         formMethodInput.value = "POST";
     });
 
-// --- EVENT EDIT DATA ---
+    // --- EVENT EDIT DATA ---
     document.querySelectorAll(".btnEdit").forEach(btn => {
         btn.addEventListener("click", function () {
             modalTitle.textContent = "Edit Data Kegiatan";
@@ -208,12 +214,13 @@ document.addEventListener("DOMContentLoaded", function () {
             document.getElementById("namaTim").value = this.dataset.tim || '';
             document.getElementById("targetDokumen").value = this.dataset.target || 100;
             document.getElementById("fungsi").value = this.dataset.fungsi || '';
-            document.getElementById("jenisKegiatan").value = this.dataset.jenis || '';
             
-            document.getElementById("tanggalMulai").value = this.dataset.mulai || '';
-            document.getElementById("tanggalSelesai").value = this.dataset.selesai || '';
+            // [PERBAIKAN] Gunakan pengecekan (if) agar tidak error jika Anda sudah menghapus form-nya
+            if(document.getElementById("jenisKegiatan")) { document.getElementById("jenisKegiatan").value = this.dataset.jenis || ''; }
+            if(document.getElementById("tanggalMulai")) { document.getElementById("tanggalMulai").value = this.dataset.mulai || ''; }
+            if(document.getElementById("tanggalSelesai")) { document.getElementById("tanggalSelesai").value = this.dataset.selesai || ''; }
             
-            //"15000.00" menjadi angka murni 15000 dengan Number() & Math.floor()
+            // "15000.00" menjadi angka murni 15000 dengan Number() & Math.floor()
             let pmlAsli = Math.floor(Number(this.dataset.honor_pml || 0));
             let pclAsli = Math.floor(Number(this.dataset.honor_pcl || 0));
             let pengolahanAsli = Math.floor(Number(this.dataset.honor_pengolahan || 0));

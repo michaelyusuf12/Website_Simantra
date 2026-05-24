@@ -57,12 +57,10 @@ class DataKegiatanController extends Controller
             'nama_tim' => 'nullable|string|max:255',
             'target_dokumen' => 'nullable|integer|min:0',
             'fungsi' => $user->role === 'admin' ? 'required|string' : 'nullable', 
-            // [REVISI] Tambahkan opsi 'Lapangan & Pengolahan' agar lolos validasi
-            'jenis_kegiatan' => 'required|in:Lapangan,Pengolahan,Lapangan & Pengolahan', 
+            // [PERBAIKAN] Diubah menjadi nullable karena formnya sudah dihapus
+            'jenis_kegiatan' => 'nullable|in:Lapangan,Pengolahan,Lapangan & Pengolahan', 
             'tgl_mulai' => 'nullable|date',
             'tgl_selesai' => 'nullable|date|after_or_equal:tgl_mulai',
-            
-            // [REVISI] Wajibkan diisi (atau biarkan 0) tanpa pandang bulu jenis kegiatannya
             'honor_pml_per_dokumen' => 'required|numeric|min:0',
             'honor_pcl_per_dokumen' => 'required|numeric|min:0',
             'honor_pengolahan_per_dokumen' => 'required|numeric|min:0',
@@ -70,8 +68,6 @@ class DataKegiatanController extends Controller
 
         // Timpa nilai fungsinya
         $validatedData['fungsi'] = $fungsiYangDisimpan;
-
-        // [REVISI] LOGIKA IF RESET 0 KITA HAPUS! Kita percaya pada inputan form modal (0 ya 0, isi ya isi).
 
         Kegiatan::create($validatedData);
 
@@ -102,20 +98,16 @@ class DataKegiatanController extends Controller
             'nama_tim' => 'nullable|string|max:255',
             'target_dokumen' => 'nullable|integer|min:0',
             'fungsi' => $user->role === 'admin' ? 'required|string' : 'nullable',
-            // [REVISI] Tambahkan opsi ketiga
-            'jenis_kegiatan' => 'required|in:Lapangan,Pengolahan,Lapangan & Pengolahan',
+            // [PERBAIKAN] Diubah menjadi nullable karena formnya sudah dihapus
+            'jenis_kegiatan' => 'nullable|in:Lapangan,Pengolahan,Lapangan & Pengolahan',
             'tgl_mulai' => 'nullable|date',
             'tgl_selesai' => 'nullable|date|after_or_equal:tgl_mulai',
-            
-            // [REVISI] Tidak pakai required_if lagi. Semua honor yang diketik di modal akan masuk.
             'honor_pml_per_dokumen' => 'required|numeric|min:0',
             'honor_pcl_per_dokumen' => 'required|numeric|min:0',
             'honor_pengolahan_per_dokumen' => 'required|numeric|min:0',
         ]);
 
         $validatedData['fungsi'] = $fungsiYangDisimpan;
-
-        // [REVISI] HAPUS LOGIKA RESET 0 PAKSA DI SINI!
 
         $datakegiatan->update($validatedData);
 

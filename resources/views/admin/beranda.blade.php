@@ -247,8 +247,7 @@
                     <tbody>
                         @forelse($daftarPenugasan ?? [] as $index => $penugasan)
                         <tr>
-                            <td class="text-center">{{ $index + 1 }}</td>
-                            <td class="fw-medium text-dark">{{ $penugasan->mitra->nama_petugas ?? 'N/A' }}</td>
+                            <td class="text-center">{{ (method_exists($daftarPenugasan, 'firstItem') ? $daftarPenugasan->firstItem() : 1) + $index }}</td>                            <td class="fw-medium text-dark">{{ $penugasan->mitra->nama_petugas ?? 'N/A' }}</td>
                             <td>
                                 @if($penugasan->details && $penugasan->details->count() > 0)
                                     {{ $penugasan->details->first()->kegiatan->Nama_kegiatan ?? $penugasan->details->first()->kegiatan->nama_kegiatan ?? '-' }}
@@ -275,9 +274,21 @@
                             </td>
                         </tr>
                         @endforelse
-                    </tbody>
-                </table>
-            </div>
+                        </tbody>
+                    </table>
+                </div> 
+                {{-- Ini penutup dari div class="table-responsive" --}}
+
+                {{-- ========================================== --}}
+                {{-- KODE UNTUK MENAMPILKAN TOMBOL PAGINATION   --}}
+                {{-- ========================================== --}}
+                <div class="d-flex justify-content-end mt-4 px-3">
+                    @if(method_exists($daftarPenugasan, 'hasPages') && $daftarPenugasan->hasPages())
+                        {{ $daftarPenugasan->links() }}
+                    @endif
+                </div>
+                </div> {{-- Ini penutup dari div class="card-body" --}}
+            </div> {{-- Ini penutup dari div class="card" --}}
         </div>
     </div>
 </div>
