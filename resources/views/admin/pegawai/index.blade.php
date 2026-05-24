@@ -144,6 +144,9 @@ document.addEventListener('DOMContentLoaded', function () {
                 
                 inputMethod.value = 'PUT';
                 formPegawai.action = button.getAttribute('data-url');
+                
+                // Kosongkan kolom password dari Autofill browser!
+                inputPassword.value = ''; 
                 inputPassword.required = false;
                 inputPassword.placeholder = "(Kosongkan jika tidak ingin ganti password)";
 
