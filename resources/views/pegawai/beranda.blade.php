@@ -223,7 +223,7 @@
                                         </td>
                                         <td class="text-center">
                                             {{-- Tombol Mata (Preview) --}}
-                                            <button class="btn btn-sm btn-outline-info px-2 py-1 btn-lihat-kontrak shadow-sm" title="Preview SPK" data-bs-toggle="modal" data-bs-target="#modalDetail" data-url="{{ route('kelolakegiatan.cetak', $spk->id_penugasan) }}?preview=true" style="border-radius: 6px;">
+                                            <button class="btn btn-sm btn-outline-info px-2 py-1 btn-lihat-kontrak shadow-sm" title="Preview SPK" data-bs-toggle="modal" data-bs-target="#modalDetail" data-url="{{ route('kelolakegiatan.show', $spk->id_penugasan) }}?preview=true" style="border-radius: 6px;">
                                                 <i class="bi bi-eye-fill"></i>
                                             </button>
                                         </td>
@@ -241,30 +241,121 @@
     </div>
 </div>
 
+{{-- MODAL LIHAT DETAIL (Desain Sama Dengan Kelola Kegiatan) --}}
+<div class="modal fade" id="modalDetail" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-xl" style="max-width: 80%;">
+        <div class="modal-content border-0 shadow-lg" style="border-radius: 15px;">
+            <div class="modal-header bg-primary text-white py-3" style="border-radius: 15px 15px 0 0;">
+                <h5 class="modal-title fw-bold"><i class="bi bi-file-earmark-text me-2"></i>Detail Surat Perjanjian Kerja</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body p-4 bg-light">
+                <div class="card border-0 shadow-sm mb-4">
+                    <div class="card-body">
+                        <h6 class="fw-bold mb-3 text-primary"><i class="bi bi-info-circle me-2"></i>Informasi Umum</h6>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <table class="table table-borderless table-sm mb-0">
+                                    <tr><td style="width: 130px;" class="fw-bold text-secondary">Nomor Surat</td><td style="width: 10px;">:</td><td class="fw-bold text-primary" id="detailNoSurat">-</td></tr>
+                                    <tr><td class="fw-bold text-secondary">Nama Mitra</td><td>:</td><td id="detailNamaMitra" class="fw-bold text-dark">-</td></tr>
+                                    <tr><td class="fw-bold text-secondary">Bulan Penugasan</td><td>:</td><td id="detailBulan">-</td></tr>
+                                </table>
+                            </div>
+                            <div class="col-md-6">
+                                <table class="table table-borderless table-sm mb-0">
+                                    <tr><td style="width: 130px;" class="fw-bold text-secondary">Tanggal Input</td><td style="width: 10px;">:</td><td id="detailTanggalSurat">-</td></tr>
+                                    <tr><td class="fw-bold text-secondary">Status Kontrak</td><td>:</td><td><span class="badge px-3 py-2" id="detailStatus">-</span></td></tr>
+                                    <tr><td class="fw-bold text-secondary">Total Honor</td><td>:</td><td class="fw-bold text-success" id="detailTotalHonor">-</td></tr>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="card border-0 shadow-sm">
+                    <div class="card-body">
+                        <h6 class="fw-bold mb-3 text-primary"><i class="bi bi-list-check me-2"></i>Daftar Rincian Pekerjaan:</h6>
+                        <div class="table-responsive">
+                            <table class="table table-bordered table-striped table-hover align-middle mb-0">
+                                <thead class="table-light text-center small fw-bold">
+                                    <tr>
+                                        <th>No</th><th>Nama Kegiatan</th><th>Peran</th><th>Tgl Mulai</th>
+                                        <th>Tgl Selesai</th><th>Volume</th><th>Satuan</th><th>Harga (Rp)</th><th>Subtotal (Rp)</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="tbodyDetailRincian"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer bg-white py-3">
+                <button type="button" class="btn btn-secondary px-4 fw-bold shadow-sm" data-bs-dismiss="modal">TUTUP</button>
+            </div>
+        </div>
+    </div>
+</div>
 @endsection
 
-{{-- SCRIPT UNTUK MODAL PREVIEW --}}
 @push('scripts')
 <script>
 document.addEventListener("DOMContentLoaded", function () {
     const btnLihatKontrak = document.querySelectorAll('.btn-lihat-kontrak');
-    const iframePreview = document.getElementById('iframePreviewKontrak');
- 
-    if(btnLihatKontrak.length > 0 && iframePreview) {
-        btnLihatKontrak.forEach(btn => {
-            btn.addEventListener('click', function () {
-                const url = this.getAttribute('data-url');
-                iframePreview.src = url;
-            });
+    const modalDetail = new bootstrap.Modal(document.getElementById('modalDetail'));
+    
+    btnLihatKontrak.forEach(btn => {
+        btn.addEventListener('click', function () {
+            const url = this.getAttribute('data-url');
+            
+            fetch(url)
+                .then(response => response.json())
+                .then(res => {
+                    if (res.status === 'success') {
+                        const d = res.data;
+                        document.getElementById('detailNoSurat').innerText = d.no_surat || '-';
+                        document.getElementById('detailNamaMitra').innerText = d.mitra ? d.mitra.nama_petugas : '-';
+                        document.getElementById('detailBulan').innerText = d.bulan_kegiatan || '-';
+                        
+                        const tgl = new Date(d.tanggal_surat);
+                        document.getElementById('detailTanggalSurat').innerText = tgl.toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' });
+                        
+                        const statusSpan = document.getElementById('detailStatus');
+                        let statusText = d.status_kontrak ? String(d.status_kontrak).trim() : 'Menunggu Approval';
+                        statusSpan.innerText = statusText;
+                        statusSpan.className = 'badge px-3 py-2'; 
+                        let statusLower = statusText.toLowerCase();
+                        if (statusLower === 'disetujui') statusSpan.classList.add('bg-success', 'text-white');
+                        else if (statusLower === 'ditolak') statusSpan.classList.add('bg-danger', 'text-white');
+                        else statusSpan.classList.add('bg-warning', 'text-dark'); 
+
+                        document.getElementById('detailTotalHonor').innerText = "Rp " + parseInt(d.total_nilai_perjanjian).toLocaleString('id-ID');
+
+                        const tbody = document.getElementById('tbodyDetailRincian');
+                        tbody.innerHTML = ''; 
+                        if (d.details && d.details.length > 0) {
+                            d.details.forEach((det, index) => {
+                                const namaKeg = det.kegiatan ? (det.kegiatan.nama_kegiatan || det.kegiatan.Nama_kegiatan) : 'Kegiatan Terhapus';
+                                const harga = parseInt(det.harga_satuan) || 0;
+                                const subtotal = harga * (parseInt(det.volume) || 0);
+                                tbody.innerHTML += `
+                                    <tr>
+                                        <td class="text-center">${index + 1}</td>
+                                        <td class="fw-bold text-dark">${namaKeg}</td>
+                                        <td class="text-center"><span class="badge bg-secondary">${det.uraian_tugas}</span></td>
+                                        <td class="text-center">${det.tanggal_mulai}</td>
+                                        <td class="text-center">${det.tanggal_selesai}</td>
+                                        <td class="text-center fw-bold">${det.volume}</td>
+                                        <td class="text-center">${det.satuan}</td>
+                                        <td class="text-end">Rp ${harga.toLocaleString('id-ID')}</td>
+                                        <td class="text-end fw-bold text-success">Rp ${subtotal.toLocaleString('id-ID')}</td>
+                                    </tr>`;
+                            });
+                        } else {
+                            tbody.innerHTML = `<tr><td colspan="9" class="text-center text-muted py-3">Tidak ada rincian kegiatan</td></tr>`;
+                        }
+                    }
+                });
         });
- 
-        const modalDetailEl = document.getElementById('modalDetail');
-        if(modalDetailEl) {
-            modalDetailEl.addEventListener('hidden.bs.modal', function () {
-                iframePreview.src = ""; // Bersihkan iframe saat modal ditutup
-            });
-        }
-    }
+    });
 });
 </script>
 @endpush

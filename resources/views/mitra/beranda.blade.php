@@ -247,9 +247,10 @@ document.addEventListener("DOMContentLoaded", function() {
                     }
                 }
             },
-            scales: {
+scales: {
                 y: {
                     beginAtZero: true,
+                    max: {{ $paguMaksimum }}, // [PERBAIKAN REVISI #7] Set nilai maksimum sumbu Y
                     ticks: {
                         callback: function(value) {
                             if(value >= 1000000) return 'Rp ' + (value/1000000) + ' Jt';

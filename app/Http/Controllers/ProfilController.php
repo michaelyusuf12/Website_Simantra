@@ -60,22 +60,21 @@ class ProfilController extends Controller
             $user->nip = $request->nip;
         }
 
-        // 3. PROSES UPLOAD FOTO PROFIL
+// 3. PROSES UPLOAD FOTO PROFIL
         if ($request->hasFile('foto')) {
-            
-            // Hapus foto lama jika ada (menggunakan disk public)
-            if ($user->foto && Storage::disk('public')->exists('profiles/' . $user->foto)) {
-                Storage::disk('public')->delete('profiles/' . $user->foto);
+            // Hapus foto lama jika ada
+            if ($user->foto && file_exists(public_path('storage/profiles/' . $user->foto))) {
+                unlink(public_path('storage/profiles/' . $user->foto));
             }
 
             // Ambil file gambar yang baru
             $file = $request->file('foto');
             
-            // Buat nama file yang unik berdasarkan waktu saat ini
+            // Buat nama file yang unik
             $nama_file = 'profil_' . time() . '.' . $file->getClientOriginalExtension();
             
-            // Simpan file ke dalam disk public
-            $file->storeAs('profiles', $nama_file, 'public');
+            // Pindahkan langsung ke folder public agar tidak butuh storage:link
+            $file->move(public_path('storage/profiles'), $nama_file);
             
             // Catat nama filenya ke data user
             $user->foto = $nama_file;

@@ -14,6 +14,7 @@
     .user-profile span { color: white; font-weight: 500; font-size: 16px; }
     .nav-link { transition: all 0.3s; }
 </style>
+    @stack('styles')
 </head>
 <body>
 
@@ -36,15 +37,20 @@
                 if($userRole == 'mitra') $berandaLink = route('mitra.beranda'); 
             @endphp
 
-            {{-- MENU BERANDA (Semua Aktor) --}}
-            <li class="nav-item"> 
-                <a href="{{ $berandaLink }}" 
-                   class="nav-link {{ (request()->routeIs('beranda') || request()->routeIs('mitra.beranda') || request()->routeIs('pegawai.beranda') || request()->routeIs('ppk.beranda')) ? 'active bg-white text-primary rounded shadow-sm' : 'text-white' }}">
-                    <i class="bi bi-house-door-fill me-2"></i> Beranda
-                </a> 
-            </li>
+        {{-- MENU BERANDA (Semua Aktor) --}}
+        <li class="nav-item"> 
+            @php
+                // Arahkan ke route 'beranda' (controller) untuk Admin, PPK, Kepala BPS
+                // Arahkan ke 'mitra.beranda' untuk Mitra
+                $berandaLink = in_array($userRole, ['admin', 'ppk', 'kepala_bps', 'pegawai']) ? route('beranda') : route('mitra.beranda');
+            @endphp
+            <a href="{{ $berandaLink }}" 
+            class="nav-link {{ (request()->routeIs('beranda') || request()->routeIs('mitra.beranda')) ? 'active bg-white text-primary rounded shadow-sm' : 'text-white' }}">
+                <i class="bi bi-house-door-fill me-2"></i> Beranda
+            </a> 
+        </li>
 
-{{-- MENU KHUSUS ADMIN --}}
+        {{-- MENU KHUSUS ADMIN --}}
             @if($userRole == 'admin')
                 <li class="nav-item"> 
                     <a href="{{ route('mitra.index') }}" class="nav-link {{ request()->routeIs('mitra.*') ? 'active bg-white text-primary rounded shadow-sm' : 'text-white' }}">

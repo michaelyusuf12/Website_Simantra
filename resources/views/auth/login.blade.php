@@ -61,7 +61,7 @@
                   
                   {{-- Input Username dengan Ikon --}}
                   <div class="mb-4">
-                    <label for="username" class="form-label fw-medium text-muted small text-uppercase">Username / Email (Khusus Mitra)</label>
+                    <label for="username" class="form-label fw-medium text-muted small text-uppercase">Username / Email</label>
                     <div class="input-group has-validation">
                         <span class="input-group-text bg-white text-primary">
                             <i class="bi bi-person-fill"></i>

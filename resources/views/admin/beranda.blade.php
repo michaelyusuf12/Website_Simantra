@@ -1,11 +1,11 @@
 @extends('layouts.master')
- 
+
 @section('title', 'Beranda Admin')
- 
+
 @section('content')
 <div class="container-fluid py-4">
- 
-    {{-- HEADER & FILTER BULAN DINAMIS (UPDATED KE VERSI ACCORDION + GLOBAL UX FILTER) --}}
+
+    {{-- HEADER & FILTER BULAN DINAMIS --}}
     @php
         $bulanIndo = [
             1 => 'Januari', 2 => 'Februari', 3 => 'Maret', 4 => 'April',
@@ -15,26 +15,20 @@
         $bulanPilih = $bulanDipilih ?? request('month', date('n')); 
         $tahunPilih = $tahunDipilih ?? request('year', date('Y'));
         
-        // Fallback jika $daftarTahun belum ter-passing sempurna di Admin
         $listTahun = $daftarTahun ?? range(2024, date('Y') + 1);
     @endphp
- 
+
     <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4">
         <div>
             <h2 class="fw-bold text-dark mb-0">Beranda Admin</h2>
             <p class="text-muted small mb-0">Kelola master data dan pantau performa aplikasi keseluruhan.</p>
         </div>
         
-        {{-- Area Filter Global (Sejajar di Kanan Atas) --}}
         <div class="d-flex flex-column flex-sm-row gap-2 align-items-sm-center">
-            
-            {{-- Form Filter Fungsi & Kegiatan --}}
             <form action="" method="GET" class="d-flex gap-2 mb-0">
-                {{-- Tetap bawa serta data periode bulan & tahun yang aktif --}}
                 <input type="hidden" name="month" value="{{ $bulanPilih }}">
                 <input type="hidden" name="year" value="{{ $tahunPilih }}">
                 
-                {{-- Dropdown Filter Fungsi --}}
                 <select name="fungsi" class="form-select form-select-sm bg-white border-primary text-primary shadow-sm px-3 py-2 fw-bold" onchange="this.form.submit()" style="min-width: 140px; border-radius: 8px; height: 40px;"> 
                     <option value="">-- Semua Fungsi --</option>
                     @foreach($listFungsi ?? [] as $f)
@@ -42,7 +36,6 @@
                     @endforeach
                 </select>
 
-                {{-- Dropdown Filter Kegiatan --}}
                 <select name="kegiatan" class="form-select form-select-sm bg-white border-primary text-primary shadow-sm px-3 py-2 fw-bold" onchange="this.form.submit()" style="min-width: 180px; max-width: 250px; border-radius: 8px; height: 40px;">
                     <option value="">-- Semua Kegiatan --</option>
                     @foreach($listKegiatan ?? [] as $keg)
@@ -52,7 +45,6 @@
                     @endforeach
                 </select>
 
-                {{-- Tombol Reset Filter --}}
                 @if(request('fungsi') || request('kegiatan'))
                     <a href="?month={{ $bulanPilih }}&year={{ $tahunPilih }}" class="btn btn-sm btn-danger d-flex align-items-center justify-content-center rounded-3 px-3 shadow-sm" title="Reset Saringan Filter" style="height: 40px; border-radius: 8px;">
                         <i class="bi bi-x-circle"></i>
@@ -60,7 +52,6 @@
                 @endif
             </form>
 
-            {{-- Dropdown Filter Periode Bulan & Tahun --}}
             <div class="dropdown shadow-sm">
                 <button class="btn btn-white dropdown-toggle border-primary bg-white fw-bold text-primary shadow-sm px-4" type="button" data-bs-toggle="dropdown" data-bs-auto-close="outside" aria-expanded="false" style="border-radius: 8px; height: 40px;">
                     <i class="bi bi-calendar3 me-2"></i> {{ $bulanIndo[(int)$bulanPilih] }} {{ $tahunPilih }}
@@ -84,7 +75,6 @@
                                     <div class="row g-2">
                                         @foreach($bulanIndo as $angka => $nama)
                                         <div class="col-4">
-                                            {{-- Modifikasi: Tautan kalender otomatis mempertahankan filter fungsi & kegiatan yang sedang aktif --}}
                                             <a href="?year={{ $th }}&month={{ $angka }}{{ request('fungsi') ? '&fungsi='.request('fungsi') : '' }}{{ request('kegiatan') ? '&kegiatan='.request('kegiatan') : '' }}" class="btn btn-sm w-100 {{ ($tahunPilih == $th && $bulanPilih == $angka) ? 'btn-primary text-white fw-bold shadow' : 'btn-outline-primary' }}" style="font-size: 0.75rem; border-radius: 6px;">
                                                 {{ substr($nama, 0, 3) }}
                                             </a>
@@ -100,10 +90,9 @@
             </div>
         </div>
     </div>
- 
-    {{-- KOTAK STATISTIK (5 CARDS DENGAN GRADIEN & DESAIN SERAGAM) --}}
+
+    {{-- KOTAK STATISTIK --}}
     <div class="row g-3 mb-4 flex-stretch">
-        {{-- Card 1: Total Mitra --}}
         <div class="col-xl col-md-4 col-sm-6">
             <div class="card border-0 text-white shadow-sm h-100" style="background: linear-gradient(135deg, #00d2ff 0%, #007bff 100%); border-radius: 12px;">
                 <div class="card-body pb-2">
@@ -119,7 +108,6 @@
             </div>
         </div>
         
-        {{-- Card 2: Total Kegiatan --}}
         <div class="col-xl col-md-4 col-sm-6">
             <div class="card border-0 text-white shadow-sm h-100" style="background: linear-gradient(135deg, #ffcf1b 0%, #ff8c00 100%); border-radius: 12px;">
                 <div class="card-body pb-2">
@@ -135,7 +123,6 @@
             </div>
         </div>
         
-        {{-- Card 3: Total Pegawai --}}
         <div class="col-xl col-md-4 col-sm-6">
             <div class="card border-0 text-white shadow-sm h-100" style="background: linear-gradient(135deg, #8E2DE2 0%, #4A00E0 100%); border-radius: 12px;">
                 <div class="card-body pb-2">
@@ -151,7 +138,6 @@
             </div>
         </div>
         
-        {{-- Card 4: Survey Aktif --}}
         <div class="col-xl col-md-6 col-sm-6">
             <div class="card border-0 text-white shadow-sm h-100" style="background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%); border-radius: 12px;">
                 <div class="card-body pb-2">
@@ -167,7 +153,6 @@
             </div>
         </div>
         
-        {{-- Card 5: Survey Selesai --}}
         <div class="col-xl col-md-6 col-sm-12">
             <div class="card border-0 text-white shadow-sm h-100" style="background: linear-gradient(135deg, #606c88 0%, #3f4c6b 100%); border-radius: 12px;">
                 <div class="card-body pb-2">
@@ -183,8 +168,8 @@
             </div>
         </div>
     </div>
- 
-    {{-- AREA GRAFIK DIBAGI DUA (BAR CHART & PIE CHART) --}}
+
+    {{-- AREA GRAFIK --}}
     <div class="row g-4 mb-4">
         {{-- Kolom Kiri: Bar Chart --}}
         <div class="col-lg-8">
@@ -212,13 +197,13 @@
                     </div>
                     <div class="mt-4 w-100">
                         <ul class="list-group list-group-flush small">
-                            <li class="list-group-item d-flex justify-content-between align-items-center border-0 px-0 pb-1">
+                            <li class="list-group-item d-flex justify-content-between align-items-center border-0 px-0 pb-1" style="cursor:pointer;" onclick="showMitraListModal('Sudah Berhonor')">
                                 <span><i class="bi bi-circle-fill text-success me-2"></i> Sudah Berhonor</span>
-                                <span class="fw-bold fs-6">{{ $mitraBerhonor ?? 0 }}</span>
+                                <span class="fw-bold fs-6 text-primary text-decoration-underline">{{ $mitraBerhonor ?? 0 }}</span>
                             </li>
-                            <li class="list-group-item d-flex justify-content-between align-items-center border-0 px-0 pt-1">
+                            <li class="list-group-item d-flex justify-content-between align-items-center border-0 px-0 pt-1" style="cursor:pointer;" onclick="showMitraListModal('Belum Bekerja')">
                                 <span><i class="bi bi-circle-fill text-danger me-2"></i> Belum Bekerja</span>
-                                <span class="fw-bold fs-6">{{ $mitraTanpaHonor ?? 0 }}</span>
+                                <span class="fw-bold fs-6 text-primary text-decoration-underline">{{ $mitraTanpaHonor ?? 0 }}</span>
                             </li>
                         </ul>
                     </div>
@@ -226,8 +211,8 @@
             </div>
         </div>
     </div>
- 
-    {{-- TABEL DAFTAR PENUGASAN (KEMBALI KE DESAIN STANDAR KARENA FILTER PINDAH KE ATAS) --}}
+
+    {{-- TABEL DAFTAR PENUGASAN --}}
     <div class="card border-0 shadow-sm" style="border-radius: 15px;">
         <div class="card-header bg-white border-bottom py-3" style="border-radius: 15px 15px 0 0;">
             <h6 class="fw-bold mb-0 text-dark"><i class="bi bi-table text-primary me-2"></i> Daftar Penugasan - Bulan {{ $bulanIndo[(int)$bulanPilih] }} {{ $tahunPilih }}</h6>
@@ -247,7 +232,8 @@
                     <tbody>
                         @forelse($daftarPenugasan ?? [] as $index => $penugasan)
                         <tr>
-                            <td class="text-center">{{ (method_exists($daftarPenugasan, 'firstItem') ? $daftarPenugasan->firstItem() : 1) + $index }}</td>                            <td class="fw-medium text-dark">{{ $penugasan->mitra->nama_petugas ?? 'N/A' }}</td>
+                            <td class="text-center">{{ (method_exists($daftarPenugasan, 'firstItem') ? $daftarPenugasan->firstItem() : 1) + $index }}</td>
+                            <td class="fw-medium text-dark">{{ $penugasan->mitra->nama_petugas ?? 'N/A' }}</td>
                             <td>
                                 @if($penugasan->details && $penugasan->details->count() > 0)
                                     {{ $penugasan->details->first()->kegiatan->Nama_kegiatan ?? $penugasan->details->first()->kegiatan->nama_kegiatan ?? '-' }}
@@ -274,44 +260,76 @@
                             </td>
                         </tr>
                         @endforelse
-                        </tbody>
-                    </table>
-                </div> 
-                {{-- Ini penutup dari div class="table-responsive" --}}
+                    </tbody>
+                </table>
+            </div> 
+            
+            <div class="d-flex justify-content-end mt-4 px-3">
+                @if(method_exists($daftarPenugasan, 'hasPages') && $daftarPenugasan->hasPages())
+                    {{ $daftarPenugasan->links() }}
+                @endif
+            </div>
+        </div> 
+    </div> 
+</div>
 
-                {{-- ========================================== --}}
-                {{-- KODE UNTUK MENAMPILKAN TOMBOL PAGINATION   --}}
-                {{-- ========================================== --}}
-                <div class="d-flex justify-content-end mt-4 px-3">
-                    @if(method_exists($daftarPenugasan, 'hasPages') && $daftarPenugasan->hasPages())
-                        {{ $daftarPenugasan->links() }}
-                    @endif
+{{-- MODAL DAFTAR MITRA (REVISI #4) --}}
+<div class="modal fade" id="modalDaftarMitraRasio" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow" style="border-radius: 12px;">
+            <div class="modal-header bg-dark text-white py-3" style="border-radius: 12px 12px 0 0;">
+                <h6 class="modal-title fw-bold" id="titleModalDaftarMitra"><i class="bi bi-people me-2"></i>Daftar Mitra</h6>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body p-0">
+                <div style="max-height: 300px; overflow-y: auto;">
+                    <ul class="list-group list-group-flush" id="listMitraRasio"></ul>
                 </div>
-                </div> {{-- Ini penutup dari div class="card-body" --}}
-            </div> {{-- Ini penutup dari div class="card" --}}
+            </div>
         </div>
     </div>
 </div>
 @endsection
- 
+
 @push('scripts')
-{{-- Panggil Library Chart.js melalui CDN --}}
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-{{-- Plugin Datalabels untuk menampilkan angka di atas bar --}}
 <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.0.0"></script>
- 
+
 <script>
+    // Menyimpan data array ke dalam variabel JS agar bisa diakses
+    const mitraBerhonorArray = @json($chartRasio['berhonor'] ?? []);
+    const mitraBelumBerhonorArray = @json($chartRasio['belum_berhonor'] ?? []);
+    let rasioModalInstance = null;
+
+    function showMitraListModal(kategori) {
+        if(!rasioModalInstance) {
+            rasioModalInstance = new bootstrap.Modal(document.getElementById('modalDaftarMitraRasio'));
+        }
+        
+        document.getElementById('titleModalDaftarMitra').innerHTML = `<i class="bi bi-people me-2"></i>Mitra ${kategori}`;
+        const ul = document.getElementById('listMitraRasio');
+        ul.innerHTML = '';
+        
+        const dataList = (kategori === 'Sudah Berhonor') ? mitraBerhonorArray : mitraBelumBerhonorArray;
+        const iconClass = (kategori === 'Sudah Berhonor') ? 'bi-check-circle-fill text-success' : 'bi-x-circle-fill text-danger';
+        
+        if(dataList && dataList.length > 0) {
+            dataList.forEach((nama, i) => {
+                ul.innerHTML += `<li class="list-group-item px-4 py-2"><i class="bi ${iconClass} me-2"></i> <span class="fw-bold text-dark">${nama}</span></li>`;
+            });
+        } else {
+            ul.innerHTML = `<li class="list-group-item text-center text-muted py-4">Tidak ada data mitra</li>`;
+        }
+        
+        rasioModalInstance.show();
+    }
+
 document.addEventListener("DOMContentLoaded", function() {
-    
-    // Registrasi plugin secara global
     Chart.register(ChartDataLabels);
     
-    // ==========================================
     // 1. RENDER CHART BAR (TOP 5 MITRA)
-    // ==========================================
     const labelMitra = {!! json_encode($topMitraLabels ?? []) !!};
     const dataHonor = {!! json_encode($topMitraHonor ?? []) !!};
- 
     const ctxBar = document.getElementById('topMitraChart').getContext('2d');
     
     if(labelMitra.length === 0) {
@@ -319,7 +337,7 @@ document.addEventListener("DOMContentLoaded", function() {
     } else {
         new Chart(ctxBar, {
             type: 'bar',
-            plugins: [ChartDataLabels], // Wajib dipanggil di sini
+            plugins: [ChartDataLabels],
             data: {
                 labels: labelMitra,
                 datasets: [{
@@ -334,19 +352,11 @@ document.addEventListener("DOMContentLoaded", function() {
             options: {
                 responsive: true,
                 maintainAspectRatio: false,
-                layout: {
-                    padding: {
-                        top: 30 // Jarak agar angka tidak terpotong tepi atas grafik
-                    }
-                },
+                layout: { padding: { top: 30 } },
                 scales: {
                     y: {
                         beginAtZero: true,
-                        ticks: {
-                            callback: function(value) { 
-                                return 'Rp ' + Number(value).toLocaleString('id-ID', { maximumFractionDigits: 0 }); 
-                            }
-                        }
+                        ticks: { callback: function(value) { return 'Rp ' + Number(value).toLocaleString('id-ID', { maximumFractionDigits: 0 }); } }
                     }
                 },
                 plugins: {
@@ -361,26 +371,17 @@ document.addEventListener("DOMContentLoaded", function() {
                             }
                         }
                     },
-                    // Konfigurasi Plugin Datalabels (Angka di atas pilar)
                     datalabels: {
-                        anchor: 'end',
-                        align: 'top',
-                        color: '#444',
-                        font: {
-                            weight: 'bold',
-                            size: 11
-                        },
-                        formatter: function(value) {
-                        return 'Rp ' + Number(value).toLocaleString('id-ID', { maximumFractionDigits: 0 });                        }
+                        anchor: 'end', align: 'top', color: '#444',
+                        font: { weight: 'bold', size: 11 },
+                        formatter: function(value) { return 'Rp ' + Number(value).toLocaleString('id-ID', { maximumFractionDigits: 0 }); }
                     }
                 }
             }
         });
     }
 
-    // ==========================================
-    // 2. RENDER PIE CHART (RASIO MITRA)
-    // ==========================================
+    // 2. RENDER PIE CHART (RASIO MITRA) - REVISI #4 (Klik chart = buka modal)
     const mitraBerhonor = {{ $mitraBerhonor ?? 0 }};
     const mitraTanpaHonor = {{ $mitraTanpaHonor ?? 0 }};
     
@@ -392,7 +393,7 @@ document.addEventListener("DOMContentLoaded", function() {
                 labels: ['Sudah Berhonor', 'Belum Bekerja'],
                 datasets: [{
                     data: [mitraBerhonor, mitraTanpaHonor],
-                    backgroundColor: ['#1cc88a', '#e74a3b'], // Hijau & Merah
+                    backgroundColor: ['#1cc88a', '#e74a3b'], 
                     borderWidth: 2,
                     hoverOffset: 6
                 }]
@@ -403,14 +404,15 @@ document.addEventListener("DOMContentLoaded", function() {
                 cutout: '70%',
                 plugins: {
                     legend: { display: false },
-                    // Nonaktifkan datalabels untuk Pie Chart agar tidak berantakan
                     datalabels: { display: false }, 
                     tooltip: {
-                        callbacks: {
-                            label: function(context) {
-                                return ' ' + context.label + ': ' + context.raw + ' Orang';
-                            }
-                        }
+                        callbacks: { label: function(context) { return ' ' + context.label + ': ' + context.raw + ' Orang'; } }
+                    }
+                },
+                onClick: (e, activeElements) => {
+                    if (activeElements.length > 0) {
+                        const index = activeElements[0].index;
+                        showMitraListModal(index === 0 ? 'Sudah Berhonor' : 'Belum Bekerja');
                     }
                 }
             }

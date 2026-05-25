@@ -15,6 +15,7 @@ document.addEventListener("DOMContentLoaded", function () {
     let honorDiDatabase = 0;
     let limitSaatIni = 3258000;
 
+    // AMBIL TEMPLATE BARIS SEBELUM SELECT2 AKTIF
     let emptyRowTemplate = '';
     let kegiatanOptionsHTML = '';
     if (tableBody && tableBody.querySelector('.row-kegiatan')) {
@@ -23,7 +24,41 @@ document.addEventListener("DOMContentLoaded", function () {
     }
 
     // ==========================================
-    // 2. FUNGSI FETCH AKUMULASI (AJAX) - REVISI ANTI STUCK
+    // [FITUR BARU] INISIALISASI SELECT2 PENCARIAN
+    // ==========================================
+    if ($.fn.select2) {
+        // Aktifkan Select2 untuk Mitra
+        if ($('#idMitra').length) {
+            $('#idMitra').select2({
+                theme: 'bootstrap-5',
+                dropdownParent: $('#modalKelolaKegiatan'),
+                width: '100%',
+                placeholder: '-- Pilih Mitra --'
+            }).on('change', fetchAkumulasi); // Jalankan cek honor tiap mitra diganti
+        }
+    }
+
+    // Fungsi untuk mengaktifkan Select2 di dropdown Kegiatan (karena baris bisa bertambah banyak)
+    function initSelect2Kegiatan(element) {
+        if ($.fn.select2) {
+            $(element).select2({
+                theme: 'bootstrap-5',
+                dropdownParent: $('#modalKelolaKegiatan'),
+                width: '100%',
+                placeholder: '-- Pilih Kegiatan --'
+            }).on('change', function() {
+                calculateRow(this.closest('.row-kegiatan'));
+            });
+        }
+    }
+
+    // Aktifkan Select2 untuk baris pertama saat halaman dimuat
+    if (tableBody) {
+        tableBody.querySelectorAll('.select-kegiatan').forEach(el => initSelect2Kegiatan(el));
+    }
+
+    // ==========================================
+    // 2. FUNGSI FETCH AKUMULASI (AJAX)
     // ==========================================
     function fetchAkumulasi() {
         if (!selectMitra || !selectBulan) return;
@@ -48,7 +83,8 @@ document.addEventListener("DOMContentLoaded", function () {
                         honorDiDatabase = parseInt(data.akumulasi) || 0;
                         limitSaatIni = parseInt(data.limit_maksimal) || 3258000;
                         
-                        infoBatas.innerHTML = `Akumulasi Tersimpan: <b class="text-primary">Rp ${honorDiDatabase.toLocaleString('id-ID')}</b> | Batas Maks: <b class="text-danger">Rp ${limitSaatIni.toLocaleString('id-ID')}</b>`;
+                        let labelTeks = editId ? 'Akumulasi SPK Lainnya' : 'Akumulasi Tersimpan';
+                        infoBatas.innerHTML = `${labelTeks}: <b class="text-primary">Rp ${honorDiDatabase.toLocaleString('id-ID')}</b> | Batas Maks: <b class="text-danger">Rp ${limitSaatIni.toLocaleString('id-ID')}</b>`;
                         
                         document.querySelectorAll('.row-kegiatan').forEach(row => updatePeranOptions(row));
                         calculateGrandTotal(); 
@@ -57,12 +93,9 @@ document.addEventListener("DOMContentLoaded", function () {
                     }
                 })
                 .catch(err => {
-                    console.error("Error Fetch Akumulasi:", err);
                     honorDiDatabase = 0;
                     limitSaatIni = 3258000; 
-                    
                     infoBatas.innerHTML = `<span class="text-danger"><i class="bi bi-exclamation-triangle"></i> Terjadi kesalahan jaringan. Menggunakan limit standar.</span>`;
-                    
                     document.querySelectorAll('.row-kegiatan').forEach(row => updatePeranOptions(row));
                     calculateGrandTotal(); 
                 });
@@ -84,7 +117,6 @@ document.addEventListener("DOMContentLoaded", function () {
         selectPeran.innerHTML = '<option value="">-- Pilih --</option>';
 
         let options = [];
-
         if (posisiMitra == '3') {
             options = ['PCL', 'PML', 'Pengolahan'];
         } else if (posisiMitra == '2') {
@@ -103,7 +135,7 @@ document.addEventListener("DOMContentLoaded", function () {
     }
 
     // ==========================================
-    // 4. FUNGSI KALKULASI & UPDATE UI
+    // 4 & 5. FUNGSI KALKULASI
     // ==========================================
     function calculateGrandTotal() {
         let totalDiForm = 0;
@@ -138,9 +170,6 @@ document.addEventListener("DOMContentLoaded", function () {
         }
     }
 
-    // ==========================================
-    // 5. FUNGSI HITUNG MATEMATIKA PER BARIS
-    // ==========================================
     function calculateRow(row) {
         const selectKegiatan = row.querySelector('.select-kegiatan');
         const selectPeran = row.querySelector('.select-peran');
@@ -171,7 +200,6 @@ document.addEventListener("DOMContentLoaded", function () {
     // ==========================================
     // 6. EVENT LISTENER UNTUK TRIGGER FUNGSI
     // ==========================================
-    if (selectMitra) selectMitra.addEventListener('change', fetchAkumulasi);
     if (selectBulan) selectBulan.addEventListener('change', fetchAkumulasi);
 
     if (btnAddRow) {
@@ -185,6 +213,7 @@ document.addEventListener("DOMContentLoaded", function () {
             });
             updatePeranOptions(newRow);
             attachEvents(newRow);
+            initSelect2Kegiatan(newRow.querySelector('.select-kegiatan')); // Aktifkan Select2 di baris baru
         });
     }
 
@@ -192,6 +221,10 @@ document.addEventListener("DOMContentLoaded", function () {
         tableBody.addEventListener('click', (e) => {
             if (e.target.closest('.btn-hapus-baris')) {
                 if (tableBody.querySelectorAll('.row-kegiatan').length > 1) {
+                    // Hancurkan Select2 sebelum menghapus baris agar memori browser tidak bocor
+                    const selectToDestroy = e.target.closest('.row-kegiatan').querySelector('.select-kegiatan');
+                    if($.fn.select2) $(selectToDestroy).select2('destroy');
+                    
                     e.target.closest('.row-kegiatan').remove();
                     calculateGrandTotal();
                 } else {
@@ -202,7 +235,7 @@ document.addEventListener("DOMContentLoaded", function () {
     }
 
     function attachEvents(row) {
-        ['.select-kegiatan', '.select-peran', '.input-volume'].forEach(s => {
+        ['.select-peran', '.input-volume'].forEach(s => {
             const el = row.querySelector(s);
             if (el) {
                 el.addEventListener('change', () => calculateRow(row));
@@ -211,10 +244,7 @@ document.addEventListener("DOMContentLoaded", function () {
         });
     }
 
-    document.querySelectorAll('.row-kegiatan').forEach(row => {
-        updatePeranOptions(row);
-        attachEvents(row);
-    });
+    document.querySelectorAll('.row-kegiatan').forEach(row => attachEvents(row));
 
     // ==========================================
     // 7. RESET FORM SAAT KLIK TAMBAH BARU
@@ -225,18 +255,19 @@ document.addEventListener("DOMContentLoaded", function () {
             document.getElementById('modalTitle').innerHTML = '<i class="bi bi-pencil-square me-2"></i> Form Penugasan Baru';
             form.reset();
             document.getElementById('formMethod').value = 'POST';
-            
-            // [REVISI PENTING 1] Hardcode route bawaan Laravel
             form.action = '/kelolakegiatan'; 
             
             const editIdInput = document.getElementById('editPenugasanId');
             if (editIdInput) editIdInput.value = '';
 
+            // Kembalikan ke 1 baris
             tableBody.innerHTML = emptyRowTemplate;
             attachEvents(tableBody.querySelector('.row-kegiatan'));
+            initSelect2Kegiatan(tableBody.querySelector('.select-kegiatan')); // Reset Select2 baris
+
+            if($.fn.select2) $('#idMitra').val('').trigger('change.select2'); // Reset Mitra Select2
 
             document.getElementById('infoBatas').innerHTML = 'Info Batas Maksimum : Silahkan pilih mitra dan Bulan.';
-            
             document.getElementById('displayTotal').innerText = 'Rp 0';
             if (statusHonorText) {
                 statusHonorText.innerText = 'Aman ( Tersisa Rp 0 )';
@@ -246,23 +277,19 @@ document.addEventListener("DOMContentLoaded", function () {
     }
 
     // ==========================================
-    // 8. SUBMIT FORM VIA AJAX
+    // 8. SUBMIT FORM VIA AJAX & EXPORT
     // ==========================================
     if (form) {
         form.addEventListener('submit', function (e) {
             e.preventDefault();
             if (btnSimpan.disabled) return false;
 
-            // [REVISI PENTING 2] Ambil CSRF Meta Tag langsung dari Master Layout
             let token = document.querySelector('meta[name="csrf-token"]');
             let csrfToken = token ? token.getAttribute('content') : '';
 
             fetch(form.action, {
                 method: 'POST',
-                headers: { 
-                    'X-CSRF-TOKEN': csrfToken, 
-                    'Accept': 'application/json' 
-                },
+                headers: { 'X-CSRF-TOKEN': csrfToken, 'Accept': 'application/json' },
                 body: new FormData(form)
             })
             .then(res => res.json())
@@ -270,20 +297,11 @@ document.addEventListener("DOMContentLoaded", function () {
                 if (data.status === 'success') {
                     Swal.fire({ icon: 'success', title: 'Berhasil!', showConfirmButton: false, timer: 1500 })
                         .then(() => window.location.href = data.redirect);
-                } else {
-                    Swal.fire('Gagal!', data.message, 'error');
-                }
-            })
-            .catch(err => {
-                console.error(err);
-                Swal.fire('Error System!', 'Gagal memproses data ke server.', 'error');
-            });
+                } else { Swal.fire('Gagal!', data.message, 'error'); }
+            }).catch(err => Swal.fire('Error System!', 'Gagal memproses data.', 'error'));
         });
     }
 
-    // ==========================================
-    // 9. LOGIKA EXPORT EXCEL & HAPUS MASTER
-    // ==========================================
     const checkAll = document.getElementById('checkAll');
     const checkItems = document.querySelectorAll('.check-item');
     const btnExportExcel = document.getElementById('btnExportExcel');
@@ -297,10 +315,8 @@ document.addEventListener("DOMContentLoaded", function () {
 
     if (btnExportExcel && formExport) {
         btnExportExcel.addEventListener('click', function () {
-            const isChecked = Array.from(checkItems).some(item => item.checked);
-            if (!isChecked) {
-                Swal.fire('Perhatian', 'Silakan centang minimal satu data yang ingin di-export.', 'warning');
-                return;
+            if (!Array.from(checkItems).some(item => item.checked)) {
+                return Swal.fire('Perhatian', 'Centang minimal satu data untuk di-export.', 'warning');
             }
             formExport.submit();
         });
@@ -311,8 +327,7 @@ document.addEventListener("DOMContentLoaded", function () {
         btn.addEventListener('click', function () {
             const id = this.getAttribute('data-id');
             Swal.fire({
-                title: 'Apakah Anda yakin?',
-                text: "Surat Tugas ini dan rinciannya akan dihapus permanen!",
+                title: 'Hapus Permanen?',
                 icon: 'warning',
                 showCancelButton: true,
                 confirmButtonColor: '#dc3545',
@@ -338,12 +353,10 @@ document.addEventListener("DOMContentLoaded", function () {
         btn.addEventListener('click', function (e) {
             e.preventDefault();
             const idPenugasan = this.getAttribute('data-id');
-            if(document.getElementById('editPenugasanId')) {
-                document.getElementById('editPenugasanId').value = idPenugasan;
-            }
+            if(document.getElementById('editPenugasanId')) document.getElementById('editPenugasanId').value = idPenugasan;
             
             document.getElementById('modalTitle').innerHTML = '<i class="bi bi-hourglass-split me-2"></i> Memuat Data...';
-            tableBody.innerHTML = '<tr><td colspan="9" class="text-center py-4"><i class="bi bi-hourglass-split me-2"></i>Mengambil data dari server...</td></tr>';
+            tableBody.innerHTML = '<tr><td colspan="9" class="text-center py-4"><i class="bi bi-hourglass-split me-2"></i>Mengambil data...</td></tr>';
             modalKelola.show();
 
             fetch(`/kelolakegiatan/show/${idPenugasan}`)
@@ -357,9 +370,15 @@ document.addEventListener("DOMContentLoaded", function () {
                         document.getElementById('formKelolaKegiatan').action = `/kelolakegiatan/${p.id_penugasan || p.id}`;
                         
                         document.getElementById('noSurat').value = p.no_surat;
-                        document.getElementById('idMitra').value = p.mitra_id;
                         document.getElementById('bulanKegiatan').value = p.bulan_kegiatan;
-
+                        
+                        // Set nilai Select2 Mitra dan Pancing Trigger
+                        if($.fn.select2) {
+                            $('#idMitra').val(p.mitra_id).trigger('change.select2');
+                        } else {
+                            document.getElementById('idMitra').value = p.mitra_id;
+                        }
+                        
                         fetchAkumulasi(); 
 
                         tableBody.innerHTML = ''; 
@@ -397,7 +416,13 @@ document.addEventListener("DOMContentLoaded", function () {
                                 tableBody.insertAdjacentHTML('beforeend', htmlRow);
 
                                 const lastRow = tableBody.lastElementChild;
-                                lastRow.querySelector('.select-kegiatan').value = dt.id_kegiatan;
+                                
+                                // Set Select2 Kegiatan untuk mode Edit
+                                const selectKegiatanModeEdit = lastRow.querySelector('.select-kegiatan');
+                                selectKegiatanModeEdit.value = dt.id_kegiatan;
+                                initSelect2Kegiatan(selectKegiatanModeEdit);
+                                if($.fn.select2) $(selectKegiatanModeEdit).trigger('change.select2');
+                                
                                 attachEvents(lastRow);
                             });
                         }
@@ -410,7 +435,6 @@ document.addEventListener("DOMContentLoaded", function () {
                     }
                 })
                 .catch(err => {
-                    console.error('Fetch Error:', err);
                     Swal.fire('Error', 'Gagal memuat data form edit.', 'error');
                     modalKelola.hide();
                 });
@@ -439,23 +463,15 @@ document.addEventListener("DOMContentLoaded", function () {
                         const tgl = new Date(d.tanggal_surat);
                         document.getElementById('detailTanggalSurat').innerText = tgl.toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' });
                         
-                        // --- MULAI KODE YANG BARU DITEMPEL ---
                         const statusSpan = document.getElementById('detailStatus');
-                        const statusText = d.status_kontrak || '-';
+                        let statusText = d.status_kontrak ? String(d.status_kontrak).trim() : 'Menunggu Approval';
                         statusSpan.innerText = statusText;
+                        statusSpan.className = 'badge px-3 py-2'; 
 
-                        // Reset semua kelas warna
-                        statusSpan.className = 'badge'; 
-
-                        // Cek status dan berikan warna yang sesuai
-                        if (statusText.toLowerCase() === 'disetujui') {
-                            statusSpan.classList.add('bg-success', 'text-white'); // Hijau
-                        } else if (statusText.toLowerCase() === 'ditolak') {
-                            statusSpan.classList.add('bg-danger', 'text-white'); // Merah
-                        } else {
-                            statusSpan.classList.add('bg-warning', 'text-dark'); // Kuning (Menunggu)
-                        }
-                        // --- AKHIR KODE YANG BARU DITEMPEL ---
+                        let statusLower = statusText.toLowerCase();
+                        if (statusLower === 'disetujui') statusSpan.classList.add('bg-success', 'text-white');
+                        else if (statusLower === 'ditolak') statusSpan.classList.add('bg-danger', 'text-white');
+                        else statusSpan.classList.add('bg-warning', 'text-dark'); 
 
                         document.getElementById('detailTotalHonor').innerText = "Rp " + parseInt(d.total_nilai_perjanjian).toLocaleString('id-ID');
 
@@ -465,7 +481,7 @@ document.addEventListener("DOMContentLoaded", function () {
                         if (d.details && d.details.length > 0) {
                             d.details.forEach((det, index) => {
                                 const tr = document.createElement('tr');
-                                const namaKeg = det.kegiatan ? det.kegiatan.nama_kegiatan : 'Kegiatan Terhapus';
+                                const namaKeg = det.kegiatan ? (det.kegiatan.nama_kegiatan || det.kegiatan.Nama_kegiatan) : 'Kegiatan Terhapus';
                                 const harga = parseInt(det.harga_satuan) || 0;
                                 const subtotal = harga * (parseInt(det.volume) || 0);
 
