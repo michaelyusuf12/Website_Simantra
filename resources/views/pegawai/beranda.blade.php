@@ -128,7 +128,7 @@
                 </div>
                 <div class="card-footer border-0 bg-transparent pt-0 pb-3">
                     <div class="small fw-medium" style="font-size: 0.8rem; opacity: 0.9;">
-                        <i class="bi bi-clock-history me-1"></i> Menunggu TTD Kepala
+                        <i class="bi bi-clock-history me-1"></i> Menunggu Persetujuan PPK
                     </div>
                 </div>
             </div>
