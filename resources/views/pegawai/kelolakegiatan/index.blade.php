@@ -181,5 +181,5 @@ document.addEventListener("DOMContentLoaded", function () {
     };
 });
 </script>
-<script src="{{ asset('js/kelolakegiatan.js') }}"></script>
+<script src="{{ asset('js/kelolakegiatan.js') }}?v={{ time() }}"></script>
 @endpush
